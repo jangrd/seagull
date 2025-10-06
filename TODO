@@ -1,0 +1,18 @@
+make elementthrow print to stderr
+
+CODE FIX:
+ !! - handle asserts with proper errors
+	- make things that loop through elements use the windows index
+	  so the tree is traversed only once
+	- add success flag to SGL_VectorAdd because malloc can fail, but the return value is already used
+	- remove 128 byte limit for SGL_Element.c -> fetchNextByDelim()
+	- support case insensitive hex colors
+	- rearrange structs so they take up less memory
+	- use memory checker to find leaks (i think there are a few so far)
+
+SECURITY FIX:
+	- handle double free by calling dectructor twice (counter??? state checker???)
+	  debug mode only???
+
+FUTURE IDEAS:
+	- generate uuid for every element so they can be removed by uuid for dynamic UIs
