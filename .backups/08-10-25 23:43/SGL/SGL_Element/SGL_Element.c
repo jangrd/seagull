@@ -276,7 +276,8 @@ void SGL_ElementRenderSelfAndChildrenDebug(SDL_Renderer* renderer, SGL_Element* 
 
     void SGL_ElementThrowDebug(const char* file, int line, SGL_Element* target, const char* message) {
         target->errored = true;
-        SGL_Log("SGL_Element threw an error in \"%s\" at line %d: %s", file, line, message);
+        printf("<-> SGL_Element threw an error in \"%s\" at line %d:\n\t", file, line);
+        printf("%s\n", message);
     }
 
 #endif

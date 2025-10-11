@@ -1,4 +1,9 @@
-make elementthrow print to stderr
+replace all prints with SGL_Log
+make work SGL_Log compile only in debug mode
+make it print everything to a logfile
+add colors to messages
+better messages
+make it keep output inside 80 columns
 
 CODE FIX:
  !! - handle asserts with proper errors

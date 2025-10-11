@@ -3,13 +3,13 @@
 CC="gcc"
 CFLAGS="-Wall -Wextra -Wpedantic"
 DFLAGS=""
-LFLAGS="-lSDL3 -lSDL3_ttf"
+LFLAGS="-Wl,-rpath=/usr/local/lib -lSDL3 -lSDL3_ttf"
 SOURCE="src"
 TARGET="BUILD"
 BACKUP=".backups"
 
 clear_build() {
-	if [[ -d "$TARGET" ]] then
+	if [[ -d "$TARGET" ]]; then
 		rm -r $TARGET
 	fi
 }
@@ -22,17 +22,18 @@ build_source() {
 		$SOURCE/SGL/SGL_Window/SGL_Window.c 			\
 		$SOURCE/SGL/SGL_Element/SGL_Element.c 			\
 		$SOURCE/SGL/SGL_Vector/SGL_Vector.c 			\
-		$SOURCE/SGL/SGL_Lib/SGL_Lib.c
+		$SOURCE/SGL/SGL_Lib/SGL_Lib.c 					\
+		$SOURCE/SGL/SGL_Log/SGL_Log.c
 }
 
 run_if_exists() {
-	if [[ -f "$TARGET/main" ]] then
+	if [[ -f "$TARGET/main" ]]; then
 		$TARGET/main
 	fi
 }
 
 backup_create() {
-	if [[ ! -d "$BACKUP" ]] then
+	if [[ ! -d "$BACKUP" ]]; then
 		mkdir $BACKUP
 	fi
 	DIRNAME=$(date +"%d-%m-%y %H:%M")
@@ -40,33 +41,33 @@ backup_create() {
 }
 
 
-if [[ "$1" = "clear" ]] then
+if [[ "$1" = "clear" ]]; then
 	clear_build
 	exit 0
-elif [[ "$1" = "run" ]] then
+elif [[ "$1" = "run" ]]; then
 	run_if_exists
 	exit 0
-elif [[ "$1" = "backup" ]] then
+elif [[ "$1" = "backup" ]]; then
 	backup_create
 	exit 0
-elif [[ "$1" = "" ]] then
+elif [[ "$1" = "" ]]; then
 	echo "No command provided"
 	exit 0
 fi
 
 
-if [[ "$2" = "prod" ]] then
+if [[ "$2" = "prod" ]]; then
 	DFLAGS="-DSGL_PROD"
-elif [[ "$2" != "" ]] then
+elif [[ "$2" != "" ]]; then
 	echo "Invalid argument $2"
 	exit 0	
 fi
 
-if [[ "$1" = "build" ]] then
+if [[ "$1" = "build" ]]; then
 	clear_build
 	build_source
 	exit 0
-elif [[ "$1" = "test" ]] then
+elif [[ "$1" = "test" ]]; then
 	clear_build
 	build_source
 	run_if_exists

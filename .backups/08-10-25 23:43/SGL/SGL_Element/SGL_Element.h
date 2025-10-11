@@ -8,7 +8,6 @@
 #include <assert.h>
 #include "../SGL_Vector/SGL_Vector.h"
 #include "../SGL_Lib/SGL_Lib.h"
-#include "../SGL_Log/SGL_Log.h"
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
