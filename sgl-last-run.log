@@ -1,0 +1,2 @@
+<-> 	SGL is running in debug mode
+	When compiling for production use -DSGL_PROD

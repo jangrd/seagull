@@ -1,9 +1,3 @@
-replace all prints with SGL_Log
-make work SGL_Log compile only in debug mode
-make it print everything to a logfile
-add colors to messages
-better messages
-make it keep output inside 80 columns
 
 CODE FIX:
  !! - handle asserts with proper errors
@@ -21,3 +15,7 @@ SECURITY FIX:
 
 FUTURE IDEAS:
 	- generate uuid for every element so they can be removed by uuid for dynamic UIs
+	- add tui to project script
+	- make nice space-based text padding algorithm
+	  make it keep output inside 80 columns
+	  add colors to messages
