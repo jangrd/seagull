@@ -2,35 +2,26 @@
 
 int main() {
     if (!SGL_Init()) return SGL_FAILURE;
+    SDL_Color red = {255, 0, 0, 255};
+    SDL_Color green = {0, 255, 0, 255};
+    SDL_Color blue = {0, 0, 255, 255};
     SGL_Window* window = SGL_WindowNew(SGL_WINDOW_PROD);
-	for (size_t i = 0; i < 500; i++) {
-		SGL_ElementAddChild(
-			window->root,
-			ELEMENT("background: #FF00FF;")
-		);
-	}
     SGL_ElementAddChild(
         window->root,
-        ELEMENT(
-            "stack: vertical;"
-            "gap: 100;"
-            "background: #000000;"
-			"padding: 2;",
-            ELEMENT(
-                "gap: 50;"
-                "background: #FFFFFF;",
-                ELEMENT("background: #FF0000;"),
-                ELEMENT("background: #00FF00; opacity: 64;")
-            ),
-            ELEMENT(
-                "background: #FF00FF;"
-                "opacity: 255;"
-                "gap: 50;"
-				"margin: 10;",
-                ELEMENT("background: #0000FF;"),
-                ELEMENT("background: #F0F00F;")
-            )
+        SGL_ELEMENT(
+        	// TODO: rename color to background and make it use 0xRGBA
+        	SGL_STYLE(.color = red, .margin = 50, .gap = 10)
+        	SGL_CHILDREN(
+        	
+        		SGL_ELEMENT(
+        			SGL_STYLE(.color = green, .padding = 20)
+        		),
 
+       			SGL_ELEMENT(
+        			SGL_STYLE(.color = blue, .padding = 20)
+        		)
+        		
+        	)
         )
     );
     SGL_WindowMainloop(window);

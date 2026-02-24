@@ -31,7 +31,8 @@ SGL_Window* SGL_WindowNew(bool debug) {
         return NULL;
     }
 
-    target->root = ELEMENT("", NULL);
+	// TODO: maybe do something about this NULL
+    target->root = SGL_ELEMENT(NULL);
     target->debug = debug;
     return target;
 }

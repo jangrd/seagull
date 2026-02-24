@@ -10,21 +10,94 @@
 #include "../SGL_Lib/SGL_Lib.h"
 #include "../SGL_Log/SGL_Log.h"
 
+#define SGL_ELEMENT_STACK_VERTICAL		0
+#define SGL_ELEMENT_STACK_HORIZONTAL	1
+
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
     SDL_FRect border;
     SDL_FRect inner;
 } SGL_ElementRect;
 
-typedef struct SGL_Element {
-    bool isHorizontal;
+typedef struct SGL_ElementStyle {
+	// stack
+	// 0 - horizontal
+	// 1 - vertical
+	bool stack;
+	// color
+	// RGBA
     SDL_Color color;
-    SGL_Vector* children;
-    SGL_ElementRect rect;
+    // units
+    // positive integer
     uint8_t units;
+    // gap (pixels)
+    // non-negative integer (TODO: float?)
     float gap;
+    // padding (pixels)
+    // non-negative integer (TODO: float?)
     float padding;
+    // margin (pixels)
+    // non-negative integer (TODO: float?)
     float margin;
+} SGL_ElementStyle;
+
+typedef enum {
+	SGL_TYPE_STYLE,
+	SGL_TYPE_CHILD
+} SGL_ElementArgumentType;
+
+typedef struct SGL_ElementBaseArgument {
+	SGL_ElementArgumentType type;
+} SGL_ElementBaseArgument;
+
+typedef struct SGL_ElementStyleArgument {
+	SGL_ElementArgumentType type;
+	SGL_ElementStyle style;
+} SGL_ElementStyleArgument;
+
+typedef struct SGL_ElementChildArgument {
+	SGL_ElementArgumentType	type;
+	SGL_Element**			children;
+	size_t					count;
+} SGL_ElementChildArgument;
+
+#define SGL_ELEMENT_STYLE_DEFAULT								\
+	.stack		= 0,											\
+	.color		= (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 0},	\
+	.units		= 1,											\
+	.gap		= 0,											\
+	.padding	= 0,											\
+	.margin		= 0
+
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverride-init-side-effects"
+#endif
+
+#define SGL_STYLE(...)															\
+	&(SGL_ElementStyleArgument) {												\
+		.type	= SGL_TYPE_STYLE,												\
+		.style	= (SGL_ElementStyle){ SGL_ELEMENT_STYLE_DEFAULT, __VA_ARGS__ }	\
+	}	
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+// TODO: chat said to use SGL_Element*[]
+//		 understand why and see if it has to be that way
+#define SGL_CHILDREN(...)																\
+	&(SGL_ElementChildArgument) {														\
+		.type		= SGL_TYPE_CHILD,													\
+		.children	= (SGL_Element*[]){ __VA_ARGS__ },									\
+		.count		= sizeof((SGL_Element*[]){ __VA_ARGS__ }) / sizeof(SGL_Element*)	\
+	}
+
+typedef struct SGL_Element {
+    SGL_ElementRect rect;
+	SGL_ElementStyle style;
+    SGL_Vector* children;
     bool errored;
     bool is_new;
 } SGL_Element;
@@ -35,34 +108,10 @@ void SGL_ElementCalculateSubrects(SGL_Element* target);
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target);
 void SGL_ElementRenderSelfAndChildrenDebug(SDL_Renderer* renderer, SGL_Element* target);
 
-#ifdef SGL_PROD
-    // PRODUCTION MODE
-    // The production versions of functions don't use excess resources for
-    // error reporting making them more efficient.
-    // If SGL_Element throws an error, program behavior is decided by macros:
-    // Define following macro to make the program crash on warnings
-    //   SGL_TERMINATE_ON_WARNING   (TODO:)
-    // Define following macro to enable error reporting
-    //   SGL_LOG_ERRORS             (TODO:)
+// SGL_Element* SGL_ElementNew(const char* config, ...);
+SGL_Element* SGL_ElementNew(void *first_arg, ...);
+#define SGL_ELEMENT(...) SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
 
-    SGL_Element* SGL_ElementNew(const char* config, ...);
-    #define ELEMENT(cfg, ...) SGL_ElementNew(cfg __VA_OPT__(,) __VA_ARGS__, (SGL_Element*)NULL)
-
-    void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...);
-
-#else
-    // DEBUG MODE
-    // The debug versions of functions accepts additional debug information
-    // (__FILE__ and __LINE__) as the first two arguments of the function.
-    // If SGL_Element throws an error, the file and line are ed to stderr.
-
-    SGL_Element* SGL_ElementNewDebug(const char* file, int line, const char* config, ...);
-    #define ELEMENT(cfg, ...) SGL_ElementNewDebug(__FILE__, __LINE__, cfg __VA_OPT__(,) __VA_ARGS__, (SGL_Element*)NULL)
-
-    void SGL_ElementThrowDebug(const char* file, int line, SGL_Element* target, const char* fmt, ...);
-    #define SGL_ElementThrow(target, fmt, ...) SGL_ElementThrowDebug(file, line, target, fmt __VA_OPT__(,) __VA_ARGS__)
-
-#endif
-
+void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...);
 
 #endif

@@ -1,10 +1,6 @@
 #include "SGL_Element.h"
 
-#ifdef SGL_PROD
-SGL_Element* SGL_ElementNew(const char* config, ...) {
-#else
-SGL_Element* SGL_ElementNewDebug(const char* file, int line, const char* config, ...) {
-#endif
+SGL_Element* SGL_ElementNew(void *first_arg, ...) {
     SGL_Element* target = (SGL_Element*)malloc(sizeof(SGL_Element));
     if (target == NULL) {
         SGL_Log("SGL_ElementNew(): malloc failed");
@@ -12,166 +8,52 @@ SGL_Element* SGL_ElementNewDebug(const char* file, int line, const char* config,
     }
     // if not set program will shit itself
     // TODO: make this better ig?
-    target->units = 1;
-    target->isHorizontal = 1;
-    target->margin = 0;
-    target->padding = 0;
-    target->color.r = 0;
-    target->color.g = 0;
-    target->color.b = 0;
-    target->color.a = 255;
-    target->gap = 0;
+
     target->errored = false;
     target->is_new = true;
-    char key[128];
-    char value[128];
-    if (strcmp(config, "") != 0) {
-        while (true) {
-            config = fetchNextByDelim(config, key, ':');
-            config = fetchNextByDelim(config, value, ';');
-            if (key[0] == '\0') {
-                break;
-            }
-            if (value[0] == '\0') {
-                SGL_ElementThrow(target, "Missing value for key '%s'", key);
-                break;
-            }
-            if (strcmp(key, "stack") == 0) {
-                if (strcmp(value, "vertical") == 0) {
-                    target->isHorizontal = 0;
-                }
-                else if (strcmp(value, "horizontal") == 0) {
-                    target->isHorizontal = 1;
-                }
-            }
-            else if (strcmp(key, "units") == 0) {
-                char* ptr = value;
-                bool valid = true;
-                while (*ptr) {
-                    if (*ptr < '0' || *ptr > '9') {
-                        valid = false;
-                        SGL_ElementThrow(target, "Key '%s' expected int, got '%s'", key, value);
-                        break;
-                    }
-                    ptr++;
-                }
-                if (valid) {
-                    target->units = atoi(value);
-                }
-            }
-            else if (strcmp(key, "background") == 0) {
-                if (value[0] != '#' || strlen(value) != 7) {
-                    SGL_ElementThrow(target, "Key '%s' expected hex color, got '%s'", key, value);
-                    break;
-                }
-                char* ptr = value + 1;
-                uint8_t color_buffer = 0;
-                uint8_t* next_color = &(target->color.r);
-                while (*ptr) {
-                    if (*ptr >= '0' && *ptr <= '9') {
-                        color_buffer *= 16;
-                        color_buffer += *ptr - '0';
-                    }
-                    else if (*ptr >= 'A' && *ptr <= 'F') {
-                        color_buffer *= 16; 
-                        color_buffer += *ptr - 'A' + 10;
-                    }
-                    else {
-                        SGL_ElementThrow(target, "Key '%s' expected hex color, got '%s'", key, value);
-                        break;
-                    }
-                    if ((ptr - value) % 2 == 0) {
-                        *(next_color) = color_buffer;
-                        next_color++;
-                        color_buffer = 0;
-                    }
-                    ptr++;
-                }
-            }
-            else if (strcmp(key, "margin") == 0) {
-                char* ptr = value;
-                bool valid = true;
-                while (*ptr) {
-                    if (*ptr < '0' || *ptr > '9') {
-                        valid = false;
-                        SGL_ElementThrow(target, "Key '%s' expected int, got '%s'", key, value);
-                        break;
-                    }
-                    ptr++;
-                }
-                if (valid) {
-                    target->margin = atoi(value);
-                }
-            }
-            else if (strcmp(key, "padding") == 0) {
-                char* ptr = value;
-                bool valid = true;
-                while (*ptr) {
-                    if (*ptr < '0' || *ptr > '9') {
-                        valid = false;
-                        SGL_ElementThrow(target, "Key '%s' expected int, got '%s'", key, value);
-                        break;
-                    }
-                    ptr++;
-                }
-                if (valid) {
-                    target->padding = atoi(value);
-                }
-            }
-            else if (strcmp(key, "gap") == 0) {
-                char* ptr = value;
-                bool valid = true;
-                while (*ptr) {
-                    if (*ptr < '0' || *ptr > '9') {
-                        valid = false;
-                        SGL_ElementThrow(target, "Key '%s' expected int, got '%s'", key, value);
-                        break;
-                    }
-                    ptr++;
-                }
-                if (valid) {
-                    target->gap = atoi(value);
-                }
-            }
-            else if (strcmp(key, "opacity") == 0) {
-                char* ptr = value;
-                bool valid = true;
-                while (*ptr) {
-                    if (*ptr < '0' || *ptr > '9') {
-                        valid = false;
-                        SGL_ElementThrow(target, "Key '%s' expected int [0-255], got '%s'", key, value);
-                        break;
-                    }
-                    ptr++;
-                }
-                if (valid) {
-                    int opacity = atoi(value);
-                    if (opacity >= 0 && opacity <= 255) {
-                        target->color.a = opacity;
-                    } else {
-                        SGL_ElementThrow(target, "Key '%s' expected int [0-255], got '%s'", key, value);
-                    }
-                }
-            }
-            else {
-                SGL_ElementThrow(target, "Unknown key: '%s'", key);
-            }
-        }
-    }
-
+    // TODO: maybe find better arguments for SGL_VectorNew
     target->children = SGL_VectorNew(1024, 1024);
     if (target->children == NULL) {
         free(target);
         return NULL;
     }
+
     va_list args;
-    va_start(args, config);
-    SGL_Element* arg = va_arg(args, SGL_Element*);
-    while (arg != NULL) {
-        SGL_ElementAddChild(target, arg);
-        arg = va_arg(args, SGL_Element*);
-    }
+    va_start(args, first_arg);
+	bool style_set = false;    
+	for (void* arg = first_arg; arg != NULL; arg = va_arg(args, void*)) {
+		SGL_ElementBaseArgument* base = arg;
+		switch (base->type) {
+			case SGL_TYPE_STYLE:
+				if (style_set) {
+					// TODO: implement proper handling
+					printf("Style set twice, not allowed behavior");
+				}
+				SGL_ElementStyleArgument* style_arg = arg;
+				target->style = style_arg->style;
+				style_set = true;
+				break;
+				
+			case SGL_TYPE_CHILD:
+				// TODO: implement
+				printf("Not implemented!\n");
+				SGL_ElementChildArgument* child_arg = arg;
+				for (size_t i = 0; i < child_arg->count; i++) {
+					// TODO: NULL SAFTEY HERE
+					SGL_ElementAddChild(target, child_arg->children[i]);
+				}
+		        arg = va_arg(args, SGL_Element*);
+				break;
+		}
+		
+	}
     va_end(args);
+
+	if (!style_set) {
+		target->style = (SGL_ElementStyle){ SGL_ELEMENT_STYLE_DEFAULT };
+	}
+
+    
     return target;
 }
 
@@ -188,36 +70,36 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
     SGL_Vector* children = parent->children;
     float total_units = 0;
     for (size_t i = 0; i < children->count; i++) {
-        total_units += children->elements[i]->units;
+        total_units += children->elements[i]->style.units;
     }
     float used_units = 0;
     for (size_t i = 0; i < children->count; i++) {
         SGL_Element* child = children->elements[i];
-        if (parent->isHorizontal) {
-            int available_width = parent->rect.inner.w - parent->gap * (children->count - 1);
-            child->rect.outer.x = parent->rect.inner.x + available_width / total_units * used_units + parent->gap * i;
+        if (parent->style.stack) {
+            int available_width = parent->rect.inner.w - parent->style.gap * (children->count - 1);
+            child->rect.outer.x = parent->rect.inner.x + available_width / total_units * used_units + parent->style.gap * i;
             child->rect.outer.y = parent->rect.inner.y;
-            child->rect.outer.w = available_width / total_units * child->units;
+            child->rect.outer.w = available_width / total_units * child->style.units;
             child->rect.outer.h = parent->rect.inner.h;
         }
         else {
-            int available_height = parent->rect.inner.h - parent->gap * (children->count - 1);
+            int available_height = parent->rect.inner.h - parent->style.gap * (children->count - 1);
             child->rect.outer.x = parent->rect.inner.x;
-            child->rect.outer.y = parent->rect.inner.y + available_height / total_units * used_units + parent->gap * i;
+            child->rect.outer.y = parent->rect.inner.y + available_height / total_units * used_units + parent->style.gap * i;
             child->rect.outer.w = parent->rect.inner.w;
-            child->rect.outer.h = available_height / total_units * child->units;
+            child->rect.outer.h = available_height / total_units * child->style.units;
         }
-        child->rect.border.x = child->rect.outer.x + child->margin;
-        child->rect.border.y = child->rect.outer.y + child->margin;
-        child->rect.border.w = child->rect.outer.w - 2 * child->margin;
-        child->rect.border.h = child->rect.outer.h - 2 * child->margin;
+        child->rect.border.x = child->rect.outer.x + child->style.margin;
+        child->rect.border.y = child->rect.outer.y + child->style.margin;
+        child->rect.border.w = child->rect.outer.w - 2 * child->style.margin;
+        child->rect.border.h = child->rect.outer.h - 2 * child->style.margin;
 
-        child->rect.inner.x = child->rect.border.x + child->padding;
-        child->rect.inner.y = child->rect.border.y + child->padding;
-        child->rect.inner.w = child->rect.border.w - 2 * child->padding;
-        child->rect.inner.h = child->rect.border.h - 2 * child->padding;
+        child->rect.inner.x = child->rect.border.x + child->style.padding;
+        child->rect.inner.y = child->rect.border.y + child->style.padding;
+        child->rect.inner.w = child->rect.border.w - 2 * child->style.padding;
+        child->rect.inner.h = child->rect.border.h - 2 * child->style.padding;
 
-        used_units += child->units;
+        used_units += child->style.units;
     } 
 
     for (size_t i = 0; i < children->count; i++) {
@@ -228,10 +110,10 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target) {
     SDL_SetRenderDrawColor(
         renderer,
-        target->color.r,
-        target->color.g,
-        target->color.b,
-        target->color.a
+        target->style.color.r,
+        target->style.color.g,
+        target->style.color.b,
+        target->style.color.a
     );
     SDL_RenderFillRect(renderer, &(target->rect.border));
     // TODO: make this add to a queue instead of recursion
@@ -253,10 +135,10 @@ void SGL_ElementRenderSelfAndChildrenDebug(SDL_Renderer* renderer, SGL_Element* 
 
         SDL_SetRenderDrawColor(
             renderer,
-            target->color.r,
-            target->color.g,
-            target->color.b,
-            target->color.a
+            target->style.color.r,
+            target->style.color.g,
+            target->style.color.b,
+            target->style.color.a
         );
         SDL_RenderFillRect(renderer, &(target->children->elements[i]->rect.inner));
 
