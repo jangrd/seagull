@@ -8,13 +8,21 @@ int main() {
     SGL_Window* window = SGL_WindowNew(SGL_WINDOW_PROD);
     SGL_ElementAddChild(
         window->root,
+        
         SGL_ELEMENT(
         	// TODO: rename color to background and make it use 0xRGBA
-        	SGL_STYLE(.color = red, .margin = 50, .gap = 10)
+        	SGL_STYLE(
+        		.stack = SGL_STACK_HORIZONTAL,
+        		.color = red,
+        		.margin = 50,
+        		.gap = 10
+        	),
+        	
         	SGL_CHILDREN(
         	
         		SGL_ELEMENT(
-        			SGL_STYLE(.color = green, .padding = 20)
+        			SGL_STYLE(.color = green, .padding = 20, .units = 2)
+        			
         		),
 
        			SGL_ELEMENT(

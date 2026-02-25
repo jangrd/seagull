@@ -35,14 +35,11 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
 				break;
 				
 			case SGL_TYPE_CHILD:
-				// TODO: implement
-				printf("Not implemented!\n");
 				SGL_ElementChildArgument* child_arg = arg;
 				for (size_t i = 0; i < child_arg->count; i++) {
 					// TODO: NULL SAFTEY HERE
 					SGL_ElementAddChild(target, child_arg->children[i]);
 				}
-		        arg = va_arg(args, SGL_Element*);
 				break;
 		}
 		

@@ -10,8 +10,10 @@
 #include "../SGL_Lib/SGL_Lib.h"
 #include "../SGL_Log/SGL_Log.h"
 
-#define SGL_ELEMENT_STACK_VERTICAL		0
-#define SGL_ELEMENT_STACK_HORIZONTAL	1
+typedef enum SGL_ElementStack {
+	SGL_STACK_VERTICAL,
+	SGL_STACK_HORIZONTAL
+} SGL_ElementStack;
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
@@ -23,7 +25,7 @@ typedef struct SGL_ElementStyle {
 	// stack
 	// 0 - horizontal
 	// 1 - vertical
-	bool stack;
+	SGL_ElementStack stack;
 	// color
 	// RGBA
     SDL_Color color;
