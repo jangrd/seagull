@@ -1,6 +1,8 @@
 #include "SGL_Element.h"
 
 SGL_Element* SGL_ElementNew(void *first_arg, ...) {
+	// TODO: check for first_arg being NULL
+
     SGL_Element* target = (SGL_Element*)malloc(sizeof(SGL_Element));
     if (target == NULL) {
         SGL_Log("SGL_ElementNew(): malloc failed");
@@ -27,7 +29,7 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
 			case SGL_TYPE_STYLE:
 				if (style_set) {
 					// TODO: implement proper handling
-					printf("Style set twice, not allowed behavior");
+					printf("Style set twice, not allowed behavior\n");
 				}
 				SGL_ElementStyleArgument* style_arg = arg;
 				target->style = style_arg->style;
@@ -50,6 +52,10 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
 		target->style = (SGL_ElementStyle){ SGL_ELEMENT_STYLE_DEFAULT };
 	}
 
+	assert(target->style.gap     >= 0.0);
+	assert(target->style.padding >= 0.0);
+	assert(target->style.margin  >= 0.0);
+	assert(target->style.border  >= 0.0);
     
     return target;
 }
@@ -72,6 +78,9 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
     float used_units = 0;
     for (size_t i = 0; i < children->count; i++) {
         SGL_Element* child = children->elements[i];
+        // TODO: get rid of this if statement
+        // i believe clay solves this by using
+        // along and across direction instead of vertical horizontal
         if (parent->style.stack) {
             int available_width = parent->rect.inner.w - parent->style.gap * (children->count - 1);
             child->rect.outer.x = parent->rect.inner.x + available_width / total_units * used_units + parent->style.gap * i;
@@ -91,10 +100,15 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
         child->rect.border.w = child->rect.outer.w - 2 * child->style.margin;
         child->rect.border.h = child->rect.outer.h - 2 * child->style.margin;
 
-        child->rect.inner.x = child->rect.border.x + child->style.padding;
-        child->rect.inner.y = child->rect.border.y + child->style.padding;
-        child->rect.inner.w = child->rect.border.w - 2 * child->style.padding;
-        child->rect.inner.h = child->rect.border.h - 2 * child->style.padding;
+		child->rect.main.x = child->rect.border.x + child->style.border;
+		child->rect.main.y = child->rect.border.y + child->style.border;
+		child->rect.main.w = child->rect.border.w - 2 * child->style.border;
+		child->rect.main.h = child->rect.border.h - 2 * child->style.border;
+
+        child->rect.inner.x = child->rect.main.x + child->style.padding;
+        child->rect.inner.y = child->rect.main.y + child->style.padding;
+        child->rect.inner.w = child->rect.main.w - 2 * child->style.padding;
+        child->rect.inner.h = child->rect.main.h - 2 * child->style.padding;
 
         used_units += child->style.units;
     } 
@@ -105,6 +119,17 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
 }
 
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target) {
+	// draw border
+	SDL_SetRenderDrawColor(
+           renderer,
+           target->style.border_color.r,
+           target->style.border_color.g,
+           target->style.border_color.b,
+           target->style.border_color.a
+       );
+	SDL_RenderFillRect(renderer, &(target->rect.border));
+
+   	// draw element
     SDL_SetRenderDrawColor(
         renderer,
         target->style.color.r,
@@ -112,56 +137,17 @@ void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* targe
         target->style.color.b,
         target->style.color.a
     );
-    SDL_RenderFillRect(renderer, &(target->rect.border));
-    // TODO: make this add to a queue instead of recursion
+    SDL_RenderFillRect(renderer, &(target->rect.main));
+
+    // iterate for all children
     for (size_t i = 0; i < target->children->count; i++) {
         SGL_ElementRenderSelfAndChildren(renderer, target->children->elements[i]);
     }
 }
 
-void SGL_ElementRenderSelfAndChildrenDebug(SDL_Renderer* renderer, SGL_Element* target) {
-    for (size_t i = 0; i < target->children->count; i++) {
-        SDL_SetRenderDrawColor(renderer, 255, 221, 135, 255);
-        SDL_RenderFillRect(renderer, &(target->children->elements[i]->rect.outer));
 
-        SDL_SetRenderDrawColor(renderer, 135, 255, 187, 255);
-        SDL_RenderFillRect(renderer, &(target->children->elements[i]->rect.border));
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderRect(renderer, &(target->children->elements[i]->rect.border));
-
-        SDL_SetRenderDrawColor(
-            renderer,
-            target->style.color.r,
-            target->style.color.g,
-            target->style.color.b,
-            target->style.color.a
-        );
-        SDL_RenderFillRect(renderer, &(target->children->elements[i]->rect.inner));
-
-    }
-    for (size_t i = 0; i < target->children->count; i++) {
-        SGL_ElementRenderSelfAndChildrenDebug(renderer, target->children->elements[i]);
-    }
+void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...) {
+    (void)fmt;
+    target->errored = true;
 }
-
-#ifdef SGL_PROD
-
-    void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...) {
-        (void)fmt;
-        target->errored = true;
-    }
-
-#else
-
-    void SGL_ElementThrowDebug(const char* file, int line, SGL_Element* target, const char* fmt, ...) {
-        target->errored = true;
-        va_list args;
-		va_start(args, fmt);
-        SGL_Log("SGL_Element threw an error in \"%s\" at line %d:", file, line);
-        SGL_LogVA(fmt, args);
-        va_end(args);
-    }
-
-#endif
 

@@ -10,37 +10,36 @@
 #include "../SGL_Lib/SGL_Lib.h"
 #include "../SGL_Log/SGL_Log.h"
 
+
+typedef struct SGL_ElementRect {
+    SDL_FRect outer;
+    SDL_FRect border;
+    SDL_FRect main;
+    SDL_FRect inner;
+} SGL_ElementRect;
+
+
 typedef enum SGL_ElementStack {
 	SGL_STACK_VERTICAL,
 	SGL_STACK_HORIZONTAL
 } SGL_ElementStack;
 
-typedef struct SGL_ElementRect {
-    SDL_FRect outer;
-    SDL_FRect border;
-    SDL_FRect inner;
-} SGL_ElementRect;
-
 typedef struct SGL_ElementStyle {
-	// stack
-	// 0 - horizontal
-	// 1 - vertical
 	SGL_ElementStack stack;
-	// color
-	// RGBA
+	// TODO: RGBA as int
     SDL_Color color;
-    // units
     // positive integer
     uint8_t units;
-    // gap (pixels)
-    // non-negative integer (TODO: float?)
+    // non-negative
     float gap;
-    // padding (pixels)
-    // non-negative integer (TODO: float?)
+    // non-negative
     float padding;
-    // margin (pixels)
-    // non-negative integer (TODO: float?)
+    // non-negative
     float margin;
+    // non-negative
+	float border;
+	// TODO: RGBA as int
+	SDL_Color border_color;
 } SGL_ElementStyle;
 
 typedef enum {
@@ -65,11 +64,13 @@ typedef struct SGL_ElementChildArgument {
 
 #define SGL_ELEMENT_STYLE_DEFAULT								\
 	.stack		= 0,											\
-	.color		= (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 0},	\
+	.color		= (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255},	\
 	.units		= 1,											\
 	.gap		= 0,											\
 	.padding	= 0,											\
-	.margin		= 0
+	.margin		= 0,											\
+	.border		= 0,											\
+	.border_color = (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255}
 
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -108,9 +109,7 @@ void SGL_ElementDestroy(SGL_Element* target);
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
 void SGL_ElementCalculateSubrects(SGL_Element* target);
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target);
-void SGL_ElementRenderSelfAndChildrenDebug(SDL_Renderer* renderer, SGL_Element* target);
 
-// SGL_Element* SGL_ElementNew(const char* config, ...);
 SGL_Element* SGL_ElementNew(void *first_arg, ...);
 #define SGL_ELEMENT(...) SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
 

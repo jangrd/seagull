@@ -1,6 +1,6 @@
 #include "SGL_Window.h"
 
-SGL_Window* SGL_WindowNew(bool debug) {
+SGL_Window* SGL_WindowNew() {
     SGL_Window* target = (SGL_Window*)malloc(sizeof(SGL_Window));
     if (target == NULL) {
         SGL_Log("Failed to allocate memory for SGL_Window\n");
@@ -33,7 +33,6 @@ SGL_Window* SGL_WindowNew(bool debug) {
 
 	// TODO: maybe do something about this NULL
     target->root = SGL_ELEMENT(NULL);
-    target->debug = debug;
     return target;
 }
 
@@ -59,12 +58,7 @@ void SGL_WindowRender(SGL_Window* target) {
     target->root->rect.inner.w = width;
     target->root->rect.inner.h = height;
     SGL_ElementCalculateSubrects(target->root);
-    if (target->debug) {
-        SGL_ElementRenderSelfAndChildrenDebug(target->renderer, target->root);
-    }
-    else {
-        SGL_ElementRenderSelfAndChildren(target->renderer, target->root);
-    }
+    SGL_ElementRenderSelfAndChildren(target->renderer, target->root);
 }
 
 void SGL_WindowMainloop(SGL_Window* target) {

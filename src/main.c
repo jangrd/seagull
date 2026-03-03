@@ -5,7 +5,7 @@ int main() {
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color green = {0, 255, 0, 255};
     SDL_Color blue = {0, 0, 255, 255};
-    SGL_Window* window = SGL_WindowNew(SGL_WINDOW_PROD);
+    SGL_Window* window = SGL_WindowNew();
     SGL_ElementAddChild(
         window->root,
         
@@ -14,19 +14,28 @@ int main() {
         	SGL_STYLE(
         		.stack = SGL_STACK_HORIZONTAL,
         		.color = red,
-        		.margin = 50,
-        		.gap = 10
+        		.padding = 10
         	),
         	
         	SGL_CHILDREN(
         	
         		SGL_ELEMENT(
-        			SGL_STYLE(.color = green, .padding = 20, .units = 2)
-        			
+        			SGL_STYLE(
+        				.color = green,
+        				.padding = -20,
+        				.units = 2,
+        				.border = 5,
+        				.border_color = (SDL_Color){ 255, 255, 0, 255 }
+        			)
         		),
 
        			SGL_ELEMENT(
-        			SGL_STYLE(.color = blue, .padding = 20)
+        			SGL_STYLE(
+        				.color = blue,
+        				.padding = 20,
+        				.border = 10,
+        				.border_color = (SDL_Color){ 255, 0, 255, 255 }
+       				)
         		)
         		
         	)
