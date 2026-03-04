@@ -80,7 +80,13 @@ void SGL_WindowMainloop(SGL_Window* target) {
         }
         if (running == false) break;
 
-        SDL_SetRenderDrawColor(target->renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(
+        	target->renderer,
+          	target->root->style.color.r,
+        	target->root->style.color.g,
+        	target->root->style.color.b,
+        	target->root->style.color.a
+        );
         SDL_RenderClear(target->renderer);
 
         SGL_WindowRender(target);

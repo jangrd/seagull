@@ -28,9 +28,9 @@ typedef struct SGL_ElementStyle {
 	SGL_ElementStack stack;
 	// TODO: RGBA as int
     SDL_Color color;
-    // positive integer
+   // positive integer
     uint8_t units;
-    // non-negative
+    // 3/ non-negative
     float gap;
     // non-negative
     float padding;
