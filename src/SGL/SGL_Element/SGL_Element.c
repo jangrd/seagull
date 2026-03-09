@@ -19,6 +19,7 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
         free(target);
         return NULL;
     }
+    target->on_click = (SGL_Callback){NULL, NULL};
 
     va_list args;
     va_start(args, first_arg);
@@ -43,6 +44,11 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
 					SGL_ElementAddChild(target, child_arg->children[i]);
 				}
 				break;
+			case SGL_TYPE_CALLBACK:
+				SGL_ElementCallbackArgument* callback_arg = arg;
+				if (callback_arg->callback_type == SGL_CALLBACK_ONCLICK) {
+					target->on_click = callback_arg->callback;
+				}
 		}
 		
 	}
@@ -63,6 +69,15 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
 void SGL_ElementDestroy(SGL_Element* target) {
     free(target);
     target = NULL;
+}
+
+bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y) {
+	return (
+		x >= target->rect.border.x &&
+		x <= (target->rect.border.x + target->rect.border.w) &&
+		y >= target->rect.border.y &&
+		y <= (target->rect.border.y + target->rect.border.h)
+	);
 }
 
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child) {

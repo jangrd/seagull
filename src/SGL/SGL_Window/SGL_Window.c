@@ -63,14 +63,44 @@ void SGL_WindowRender(SGL_Window* target) {
 
 void SGL_WindowMainloop(SGL_Window* target) {
     bool running = true;
+    SGL_Element* mdown_element = NULL;
+   	SGL_Element* mup_element = NULL;
+
     while (running) {
+        SGL_Window_UpdateIndexR(target->index, target->root);
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
+            
+            else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+            	// calculate element that might be getting clicked
+				for (size_t i = 0; i < target->index->count; i++) {
+					SGL_Element* element = target->index->elements[i];
+               		if (SGL_ElementIsPointInside(element, event.button.x, event.button.y)) {
+               			mdown_element = element;
+               		}
+				}
+           	}
+           	
+           	else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+				for (size_t i = 0; i < target->index->count; i++) {
+					SGL_Element* element = target->index->elements[i];
+              		if (SGL_ElementIsPointInside(element, event.button.x, event.button.y)) {
+              			mup_element = element;
+              		}						
+				}
+           		if (mdown_element != NULL) {
+           			if (mup_element == mdown_element) {
+						if (mup_element->on_click.function != NULL) {
+							(*mup_element->on_click.function)(mup_element->on_click.parameters);
+						}
+           			}
+           		}
+           	}
         }
-        SGL_Window_UpdateIndexR(target->index, target->root);
         
         for (size_t i = 0; i < target->index->count; i++) {
             if (target->index->elements[i]->errored) {

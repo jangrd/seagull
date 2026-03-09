@@ -1,5 +1,10 @@
 #include "./SGL/SGL.h"
 
+void myFunc(void *arg) {
+	printf("Hello %s\n", (char*)arg);
+}
+
+
 int main() {
     if (!SGL_Init()) return SGL_FAILURE;
 
@@ -39,7 +44,8 @@ int main() {
 								.color = color_light,
 								.border = 2,
 								.border_color = (SDL_Color){ 0, 0, 0, 255 }
-							)
+							),
+							SGL_ONCLICK(myFunc, "jan")
 						),
 						SGL_ELEMENT(
 							SGL_STYLE(
@@ -61,6 +67,9 @@ int main() {
         	)
         )
     );
+
+	// window->root->children->elements[0]->on_click = SGL_CALLBACK(myFunc, "jan");
+    
     SGL_WindowMainloop(window);
     SGL_WindowDestroy(window);
     SGL_Quit();
