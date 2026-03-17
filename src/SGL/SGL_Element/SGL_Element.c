@@ -1,6 +1,6 @@
 #include "SGL_Element.h"
 
-SGL_Element* SGL_ElementNew(void *first_arg, ...) {
+SGL_Element* SGL_ElementNew(void* first_arg, ...) {
 	// TODO: check for first_arg being NULL
 
     SGL_Element* target = (SGL_Element*)malloc(sizeof(SGL_Element));
@@ -11,7 +11,6 @@ SGL_Element* SGL_ElementNew(void *first_arg, ...) {
     // if not set program will shit itself
     // TODO: make this better ig?
 
-    target->errored = false;
     target->is_new = true;
     // TODO: maybe find better arguments for SGL_VectorNew
     target->children = SGL_VectorNew(1024, 1024);
@@ -135,22 +134,29 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
 
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target) {
 	// draw border
+
 	SDL_SetRenderDrawColor(
-           renderer,
-           target->style.border_color.r,
-           target->style.border_color.g,
-           target->style.border_color.b,
-           target->style.border_color.a
-       );
+        renderer,
+        target->style.border_color.r,
+        target->style.border_color.g,
+        target->style.border_color.b,
+        target->style.border_color.a
+    );
 	SDL_RenderFillRect(renderer, &(target->rect.border));
 
    	// draw element
+  //  	printf("%d %d %d %d\n",
+		// target->style.background_color.r,
+		// target->style.background_color.b,
+		// target->style.background_color.g,
+		// target->style.background_color.a
+  //  	);
     SDL_SetRenderDrawColor(
         renderer,
-        target->style.color.r,
-        target->style.color.g,
-        target->style.color.b,
-        target->style.color.a
+        target->style.background_color.r,
+        target->style.background_color.g,
+        target->style.background_color.b,
+        target->style.background_color.a
     );
     SDL_RenderFillRect(renderer, &(target->rect.main));
 
@@ -158,11 +164,5 @@ void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* targe
     for (size_t i = 0; i < target->children->count; i++) {
         SGL_ElementRenderSelfAndChildren(renderer, target->children->elements[i]);
     }
-}
-
-
-void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...) {
-    (void)fmt;
-    target->errored = true;
 }
 

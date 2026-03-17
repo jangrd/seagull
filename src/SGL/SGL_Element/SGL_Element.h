@@ -10,6 +10,29 @@
 #include "../SGL_Lib/SGL_Lib.h"
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
+#include "../SGL_Theme/SGL_Theme.h"
+// #include "../SGL_Window/SGL_Window.h"
+
+// #include "../SGL_Window/SGL_Window.h"
+// TODO: remove this
+// typedef struct SGL_MouseState {
+// 	SGL_Element* last_mdown;
+// 	bool click_was_left;
+// } SGL_MouseState;
+// 
+// typedef struct SGL_WindowContext {
+// 	SGL_Theme theme;
+// } SGL_WindowContext;
+
+// 
+// typedef struct SGL_Window {
+//     SDL_Window* window;
+//     SDL_Renderer* renderer;
+//     SGL_Element* root;
+//     SGL_Vector* index;
+//     SGL_MouseState mouse;
+// } SGL_Window;
+
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
@@ -25,6 +48,10 @@ typedef enum SGL_ElementStack {
 } SGL_ElementStack;
 
 typedef struct SGL_ElementStyle {
+	SDL_Color background_color;
+	SDL_Color border_color;
+	SDL_Color text_color;
+	
 	SGL_ElementStack stack;
 	// TODO: RGBA as int
     SDL_Color color;
@@ -39,7 +66,6 @@ typedef struct SGL_ElementStyle {
     // non-negative
 	float border;
 	// TODO: RGBA as int
-	SDL_Color border_color;
 } SGL_ElementStyle;
 
 typedef enum {
@@ -117,7 +143,6 @@ typedef struct SGL_Element {
     SGL_Vector* children;
     SGL_Callback on_click;
     // TODO: turn these bools into unified state
-    bool errored;
     bool is_new;
 } SGL_Element;
 
@@ -127,9 +152,11 @@ void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
 void SGL_ElementCalculateSubrects(SGL_Element* target);
 void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target);
 
-SGL_Element* SGL_ElementNew(void *first_arg, ...);
-#define SGL_ELEMENT(...) SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
+typedef struct SGL_WindowContext {
+	SGL_Theme theme;
+} SGL_WindowContext;
 
-void SGL_ElementThrow(SGL_Element* target, const char* fmt, ...);
+SGL_Element* SGL_ElementNew(void* first_arg, ...);
+#define SGL_ELEMENT(...) SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
 
 #endif

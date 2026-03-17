@@ -1,0 +1,28 @@
+#!/bin/bash
+
+EDITOR="micro"
+
+tmux new-session -d -s seagull 
+
+tmux rename-window -t seagull:0 "terminal"
+tmux send-keys -t seagull:0 "cd ~/seagull" C-m
+
+tmux new-window -t seagull:1 -n "main"
+tmux send-keys -t seagull:1 "$EDITOR src/main.c" C-m
+
+tmux new-window -t seagull:2 -n "window"
+tmux send-keys -t seagull:2 "$EDITOR src/SGL/SGL_Window/SGL_Window.c" C-m
+tmux split-window -h
+tmux send-keys -t seagull:2.1 "$EDITOR src/SGL/SGL_Window/SGL_Window.h" C-m
+
+tmux new-window -t seagull:3 -n "element"
+tmux send-keys -t seagull:3 "$EDITOR src/SGL/SGL_Element/SGL_Element.c" C-m
+tmux split-window -h
+tmux send-keys -t seagull:3.1 "$EDITOR src/SGL/SGL_Element/SGL_Element.h" C-m
+
+tmux new-window -t seagull:4 -n "index"
+tmux send-keys -t seagull:4 "$EDITOR src/SGL/SGL_Index/SGL_Index.c" C-m
+tmux split-window -h
+tmux send-keys -t seagull:4.1 "$EDITOR src/SGL/SGL_Index/SGL_Index.h" C-m
+
+tmux attach -t seagull

@@ -11,6 +11,10 @@ CODE FIX:
 	- use memory checker to find leaks (i think there are a few so far)
 	- make screen update only when a change is detected (global flag?, element flag?, window flag?)
 	- cap fps to monitor refresh rate (default) or user specified value
+	- do my own memory management for index
+	  allocate a block of memory then manually place the index nodes inside
+	  helps with cache hits
+	  possibly, idk honestly
 
 SECURITY FIX:
 	- handle double free by calling dectructor twice (counter??? state checker???)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CC="gcc"
-CFLAGS="-Wall -Wextra -Wpedantic -std=c23 -Wno-override-init-side-effects -Wno-override-init"
+CFLAGS="-g -Wall -Wextra -Wpedantic -std=c23 -Wno-override-init-side-effects -Wno-override-init"
 DFLAGS=""
 LFLAGS="-Wl,-rpath=/usr/local/lib -lSDL3 -lSDL3_ttf"
 SOURCE="src"
@@ -23,7 +23,8 @@ build_source() {
 		$SOURCE/SGL/SGL_Element/SGL_Element.c 			\
 		$SOURCE/SGL/SGL_Vector/SGL_Vector.c 			\
 		$SOURCE/SGL/SGL_Lib/SGL_Lib.c 					\
-		$SOURCE/SGL/SGL_Log/SGL_Log.c
+		$SOURCE/SGL/SGL_Log/SGL_Log.c					\
+		$SOURCE/SGL/SGL_Index/SGL_Index.c
 }
 
 run_if_exists() {
