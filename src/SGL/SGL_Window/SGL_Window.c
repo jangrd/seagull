@@ -58,7 +58,7 @@ void SGL_WindowRender(SGL_Window* target) {
 void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
 	target->theme = theme;
 	// TODO: remove magic
-	size_t queue_size = target->index->count + 1024;
+	size_t queue_size = SGL_IndexCount(target->index) + 1024;
 	SGL_Element** queue = (SGL_Element**)malloc(queue_size * sizeof(SGL_Element*));
 
     size_t first = 0;
@@ -90,16 +90,17 @@ void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
 void SGL_Window_HandleMouseclick(SGL_Window* target, SDL_Event* event) {
 	SGL_Element* clicked_element = NULL;
 	SGL_IndexNode* node = target->index->first;
-	for (size_t i = 0; i < target->index->count; i++) {
-   		if (SGL_ElementIsPointInside(node->element, event->button.x, event->button.y)) {
+	if (node == NULL) {
+		printf("watafak\n");
+	}
+	while (node != NULL) {
+   		if (SGL_ElementIsPointInside(node->element, event->button.x, event->button.y)) {   		
    			clicked_element = node->element;
    		}
-   		if (node->next != NULL) {
-   			node = node->next;
-   		}
+		node = node->next;	
 	}
 	if (clicked_element == NULL) {
-		printf("Oopsie\n");
+		printf("No clicked element found, ignoring...\n");
 		return;
 	}
 
@@ -140,6 +141,7 @@ void SGL_WindowMainloop(SGL_Window* target) {
     SDL_Event event;
     while (running) {
         SGL_Window_UpdateAndIndexTree(target);
+
         while (SDL_PollEvent(&event)) {
         	switch (event.type) {
         		case SDL_EVENT_QUIT:
@@ -170,111 +172,71 @@ void SGL_WindowMainloop(SGL_Window* target) {
     }
 }
 
-
 void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
-    if (target == NULL || target->index == NULL) return;
+    if (target == NULL) return;
 
-    int stack_size = 1024;
-    SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));
-    if (stack == NULL) return; // Error in memory allocation
+    size_t stack_size = 1024;
+    SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));    if (stack == NULL) return;
+    size_t top = 0;
+    stack[top++] = target->root;
 
-    int top = 0;
-    stack[top++] = target->root; // Push the root onto the stack
-    SGL_IndexNode* previous_node = NULL;
+    if (target->index == NULL) {
+    	printf("target->index == NULL\n");
+    	return;
+    } 
+    SGL_IndexNode* current_node = target->index->first;
 
-    while (top > 0) {
-        SGL_Element* current = stack[--top]; // Pop from the stack
-        if (current == NULL) continue;
+	while (top > 0) {
+		SGL_Element* element = stack[--top];
+		
+		if (element == NULL) {
+			printf("ELEMENT je NULL");
+			return;
+		}
 
-        // Check if the current element is new
-        if (current->is_new) {
-            current->style.background_color = target->theme->color_bg;
-            current->style.border_color = target->theme->color_border;
-            current->style.text_color = target->theme->color_text;
-            current->is_new = false;
+		if (current_node != NULL) {
+			if (element == current_node->element) {
+				if (current_node != NULL) {
+					current_node = current_node->next;
+				}
+				continue;
+			}
+		} else {
+			
+		}
 
-            // Attempt to insert into the index
-            if (SGL_IndexInsert(target->index, previous_node, current)) {
-                printf("SGL_IndexInsert() failed for element: %p\n", (void*)current);
-            } else {
-                previous_node = current; // Update previous_node only on successful insert
-            }
-        }
+		for (size_t i = 0; i < element->children->count; i++) {
+			if (element->children->elements[i] == NULL) {
+				printf("Child %zu is NULL, skipping...\n", i);
+				continue;
+			}
+			stack[top++] = element->children->elements[i];
+		}
 
-        // Push the children onto the stack in reverse order (for DFS)
-        for (size_t i = 0; i < current->children->count; i++) {
-            if (top >= stack_size) { // Check for stack overflow
-                stack_size *= 2; // Double the stack size
-                SGL_Element** new_stack = realloc(stack, stack_size * sizeof(SGL_Element*));
-                if (new_stack == NULL) {
-                    perror("realloc");
-                    free(stack);
-                    return; // Exit on allocation failure
-                }
-                stack = new_stack; // Safely update the stack pointer
-            }
-            stack[top++] = current->children->elements[current->children->count - 1 - i]; // Push in reverse order
-        }
-    }
+		if (element->is_new) {
+			element->style.background_color = target->theme->color_bg;
+			element->style.border_color = target->theme->color_border;
+			element->style.text_color = target->theme->color_text;
 
-    free(stack); // Free allocated memory for the stack
+			if (current_node == NULL) {
+				if (SGL_IndexAppend(target->index, element)) {
+					printf("SGL_IndexAppend() failed\n");
+					return;
+				}
+			} else {
+				if (SGL_IndexInsert(current_node, element) == 0) {
+					current_node = current_node->next;
+				} else {
+					// TODO: handle better?
+					printf("SGL_IndexInsert() failed\n");
+				}
+			}
+			
+		}
+	}
+	
+    free(stack);
 }
-
-
-// void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
-//     if (target == NULL) return;
-// 
-//     int stack_size = 1024;
-//     SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));    if (stack == NULL) return;
-// 
-//     int top = 0;
-//     stack[top++] = target->root;
-// 
-//     SGL_IndexNode* current_node = target->index->first;
-//     if (target->index == NULL) return;
-//    	SGL_IndexNode* previous_node = NULL;
-//     do {
-//         if (top <= 0) continue;  // No elements to pop
-//         
-//         SGL_Element* current = stack[--top]; // Pop from stack
-//         if (current == NULL) continue;
-// 
-// 		// check if its new
-// 		if (current->is_new) {
-// 			current->style.background_color = target->theme->color_bg;
-// 	        current->style.border_color = target->theme->color_border;
-// 	        current->style.text_color = target->theme->color_text;
-// 			current->is_new = false;
-// 
-// 	        if (SGL_IndexInsert(target->index, previous_node, current)) {
-// 	            printf("SGL_IndexInsert() failed\n");
-// 	        }
-// 		}
-// 
-//         for (size_t i = 0; i < current->children->count; i++) {
-//             if (top >= stack_size) {  // Check stack overflow
-//                 stack_size *= 2;  // Grow the stack
-//                 SGL_Element** new_stack = realloc(stack, stack_size * sizeof(SGL_Element*));
-//                 if (new_stack == NULL) {
-//                     perror("realloc");
-//                     free(stack);  // Free original stack
-//                     return;
-//                 }
-//                 stack = new_stack; // Reassign to the new stack
-//             }
-//             stack[top++] = current->children->elements[i];
-//         }
-//         
-// 		if (current_node == NULL) {
-// 			printf("BREJK\n");
-// 			break;
-// 		};
-// 		previous_node = current_node;
-//         current_node = current_node->next;
-//     } while (top > 0);
-// 
-//     free(stack);
-// }
 
 
 // 

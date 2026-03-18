@@ -10,12 +10,14 @@ typedef struct SGL_IndexNode {
 } SGL_IndexNode;
 
 typedef struct SGL_Index {
-	size_t count;
 	SGL_IndexNode* first;
 } SGL_Index;
 
+
 SGL_Index* SGL_IndexNew();
-bool SGL_IndexInsert(SGL_Index* index, SGL_IndexNode* after, SGL_Element* element);
+size_t SGL_IndexCount(SGL_Index* index);
+bool SGL_IndexInsert(SGL_IndexNode* after, SGL_Element* element);
+bool SGL_IndexAppend(SGL_Index* index, SGL_Element* element);
 
 
 #endif
