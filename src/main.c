@@ -1,7 +1,8 @@
 #include "./SGL/SGL.h"
 
+int c = 0;
 void myFunc(void *arg) {
-	printf("Hello %s\n", (char*)arg);
+	printf("%d: Hello %s\n", c++, (char*)arg);
 }
 
 SDL_Color* SGL_ColorHex(uint32_t hex) {
@@ -21,6 +22,8 @@ SDL_Color* SGL_ColorHex(uint32_t hex) {
 
 int main() {
     if (!SGL_Init()) return SGL_FAILURE;
+
+	printf("Element: %zu\n", sizeof(SGL_Element));
 
     SGL_Window* window = SGL_WindowNew();
     SGL_Theme theme = SGL_THEME_DEFAULT;

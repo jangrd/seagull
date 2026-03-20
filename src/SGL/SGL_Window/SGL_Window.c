@@ -122,18 +122,10 @@ void SGL_WindowRender(SGL_Window* target) {
         depth++;
     } while (first != last);
 	free(queue);
-
-	// 
- //    for (SGL_IndexNode* node = target->index->first; node != NULL; node = node->next) {
-	// 	// DRAW BORDER
-	// 	
- //    }
 }
 
 void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
 	target->theme = theme;
-	// TODO: remove magic
-	
 }
 
 void SGL_Window_HandleMouseclick(SGL_Window* target, SDL_Event* event) {
@@ -281,72 +273,3 @@ void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
     free(stack);
 }
 
-
-// 
-// void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
-//     if (target == NULL) return;
-//     
-// 	int stack_size = 1024;
-// 	SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));
-// 	if (stack == NULL) return;
-// 	
-// 	int top = 0;
-// 	stack[top++] = target->root;
-// 
-// 	SGL_IndexNode* node = target->index->first;
-// 
-// 	do {
-// 		// TODO: chat
-// 		if (top <= 0) continue;
-// 	
-// 		SGL_Element* current = stack[--top];
-// 		if (current == NULL) {
-// 			printf("nebi se trebalo desit current==NULL\n");
-// 			return;
-// 		}
-// 
-// 		if (node == NULL) {
-// 			current->style.background_color = target->theme->color_bg;
-// 			current->style.border_color = target->theme->color_border;
-// 			current->style.text_color = target->theme->color_text;
-// 
-// 			if (!SGL_IndexInsert(target->index, node, current)) {
-// 				printf("SGL_IndexInsert() failed\n");
-// 			}
-// 		}
-// 		
-// 		if (node->element != current) {
-// 			current->style.background_color = target->theme->color_bg;
-// 			current->style.border_color = target->theme->color_border;
-// 			current->style.text_color = target->theme->color_text;
-// 
-// 			if (!SGL_IndexInsert(target->index, node, current)) {
-// 				printf("SGL_IndexInsert() failed\n");
-// 			}
-// 	        
-// 		}
-// 
-// 		for (size_t i = 0; i < current->children->count; i++) {
-// 			if (top >= stack_size) {
-// 				stack_size *= 2;
-//                 SGL_Element** new_stack = realloc(stack, stack_size * sizeof(SGL_Element*));
-//                 if (new_stack == NULL) {
-// 					// TODO: handle better
-//                     perror("realloc");
-//                     free(stack);
-//                     return;
-//                 }
-//                 stack = new_stack;
-// 			}
-// 			stack[top++] = current->children->elements[i];
-// 		}
-// 
-// 		node = node->next;
-// 	} while (top > 0);	
-// 	free(stack);
-// }
-		// TODO: possibly is_new now not needed
-		// if (current->is_new) {
-		// 	
-	 //        current->is_new = false;
-		// }
