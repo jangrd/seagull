@@ -131,38 +131,3 @@ void SGL_ElementCalculateSubrects(SGL_Element* parent) {
         SGL_ElementCalculateSubrects(children->elements[i]);
     }
 }
-
-void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target) {
-	// draw border
-
-	SDL_SetRenderDrawColor(
-        renderer,
-        target->style.border_color.r,
-        target->style.border_color.g,
-        target->style.border_color.b,
-        target->style.border_color.a
-    );
-	SDL_RenderFillRect(renderer, &(target->rect.border));
-
-   	// draw element
-  //  	printf("%d %d %d %d\n",
-		// target->style.background_color.r,
-		// target->style.background_color.b,
-		// target->style.background_color.g,
-		// target->style.background_color.a
-  //  	);
-    SDL_SetRenderDrawColor(
-        renderer,
-        target->style.background_color.r,
-        target->style.background_color.g,
-        target->style.background_color.b,
-        target->style.background_color.a
-    );
-    SDL_RenderFillRect(renderer, &(target->rect.main));
-
-    // iterate for all children
-    for (size_t i = 0; i < target->children->count; i++) {
-        SGL_ElementRenderSelfAndChildren(renderer, target->children->elements[i]);
-    }
-}
-

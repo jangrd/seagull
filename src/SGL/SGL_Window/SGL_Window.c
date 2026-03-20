@@ -52,12 +52,7 @@ void SGL_WindowRender(SGL_Window* target) {
     target->root->rect.inner.w = width;
     target->root->rect.inner.h = height;
     SGL_ElementCalculateSubrects(target->root);
-    SGL_ElementRenderSelfAndChildren(target->renderer, target->root);
-}
 
-void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
-	target->theme = theme;
-	// TODO: remove magic
 	size_t queue_size = SGL_IndexCount(target->index) + 1024;
 	SGL_Element** queue = (SGL_Element**)malloc(queue_size * sizeof(SGL_Element*));
 
@@ -70,14 +65,56 @@ void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
 		for (size_t i = 0; i < level_size; i++) {
             SGL_Element* current = queue[first++];
 
-			if (depth % 2 == 1) {
-            	current->style.background_color = target->theme->color_dark;
+			// DRAW BORDER
+			if (current->style.border_color == NULL) {
+				SDL_SetRenderDrawColor(
+		   	        target->renderer,
+		   	        target->theme->color_border.r,
+		   	        target->theme->color_border.g,
+		   	        target->theme->color_border.b,
+		   	        target->theme->color_border.a
+		   	    );
 			} else {
-            	current->style.background_color = target->theme->color_light;
+		    	SDL_SetRenderDrawColor(
+		   	        target->renderer,
+		   	        current->style.border_color->r,
+		   	        current->style.border_color->g,
+		   	        current->style.border_color->b,
+		   	        current->style.border_color->a
+		   	    );
 			}
-       		current->style.border_color = target->theme->color_border;
-       		current->style.text_color = target->theme->color_text;
- 			
+	   		SDL_RenderFillRect(target->renderer, &(current->rect.border));
+
+			// DRAW MAIN
+			if (current->style.background_color == NULL) {
+				if (depth % 2 == 1) {
+	            	SDL_SetRenderDrawColor(
+  			   	        target->renderer,
+  			   	        target->theme->color_dark.r,
+  			   	        target->theme->color_dark.g,
+  			   	        target->theme->color_dark.b,
+  			   	        target->theme->color_dark.a
+  			   	    );
+				} else {
+	            	SDL_SetRenderDrawColor(
+  			   	        target->renderer,
+  			   	        target->theme->color_light.r,
+  			   	        target->theme->color_light.g,
+  			   	        target->theme->color_light.b,
+  			   	        target->theme->color_light.a
+  			   	    );
+				}
+			} else {
+				SDL_SetRenderDrawColor(
+		   	        target->renderer,
+		   	        current->style.background_color->r,
+		   	        current->style.background_color->g,
+		   	        current->style.background_color->b,
+		   	        current->style.background_color->a
+		   	    );
+			}
+	   	    SDL_RenderFillRect(target->renderer, &(current->rect.main));
+       		   	    
             for (size_t j = 0; j < current->children->count; j++) {
             	queue[last++] = current->children->elements[j];
             }
@@ -85,6 +122,18 @@ void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
         depth++;
     } while (first != last);
 	free(queue);
+
+	// 
+ //    for (SGL_IndexNode* node = target->index->first; node != NULL; node = node->next) {
+	// 	// DRAW BORDER
+	// 	
+ //    }
+}
+
+void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme) {
+	target->theme = theme;
+	// TODO: remove magic
+	
 }
 
 void SGL_Window_HandleMouseclick(SGL_Window* target, SDL_Event* event) {
@@ -167,7 +216,6 @@ void SGL_WindowMainloop(SGL_Window* target) {
 
         SGL_WindowRender(target);
         
-        //SDL_RenderTexture(target->renderer, t_text, NULL, &pos);
         SDL_RenderPresent(target->renderer);
     }
 }
@@ -214,10 +262,6 @@ void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
 		}
 
 		if (element->is_new) {
-			element->style.background_color = target->theme->color_bg;
-			element->style.border_color = target->theme->color_border;
-			element->style.text_color = target->theme->color_text;
-
 			if (current_node == NULL) {
 				if (SGL_IndexAppend(target->index, element)) {
 					printf("SGL_IndexAppend() failed\n");
@@ -231,10 +275,9 @@ void SGL_Window_UpdateAndIndexTree(SGL_Window* target) {
 					printf("SGL_IndexInsert() failed\n");
 				}
 			}
-			
+			element->is_new = false;			
 		}
-	}
-	
+	}	
     free(stack);
 }
 

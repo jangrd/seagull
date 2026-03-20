@@ -11,28 +11,6 @@
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
-// #include "../SGL_Window/SGL_Window.h"
-
-// #include "../SGL_Window/SGL_Window.h"
-// TODO: remove this
-// typedef struct SGL_MouseState {
-// 	SGL_Element* last_mdown;
-// 	bool click_was_left;
-// } SGL_MouseState;
-// 
-// typedef struct SGL_WindowContext {
-// 	SGL_Theme theme;
-// } SGL_WindowContext;
-
-// 
-// typedef struct SGL_Window {
-//     SDL_Window* window;
-//     SDL_Renderer* renderer;
-//     SGL_Element* root;
-//     SGL_Vector* index;
-//     SGL_MouseState mouse;
-// } SGL_Window;
-
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
@@ -41,31 +19,23 @@ typedef struct SGL_ElementRect {
     SDL_FRect inner;
 } SGL_ElementRect;
 
-
 typedef enum SGL_ElementStack {
 	SGL_STACK_VERTICAL,
 	SGL_STACK_HORIZONTAL
 } SGL_ElementStack;
 
 typedef struct SGL_ElementStyle {
-	SDL_Color background_color;
-	SDL_Color border_color;
-	SDL_Color text_color;
+	// TODO: free colors on element destroy
+	SDL_Color* background_color;
+	SDL_Color* border_color;
+	SDL_Color* text_color;
 	
 	SGL_ElementStack stack;
-	// TODO: RGBA as int
-    SDL_Color color;
-    // positive integer
     uint8_t units;
-    // 3/ non-negative
     float gap;
-    // non-negative
     float padding;
-    // non-negative
     float margin;
-    // non-negative
-	float border;
-	// TODO: RGBA as int
+   	float border;
 } SGL_ElementStyle;
 
 typedef enum {
@@ -95,16 +65,16 @@ typedef struct SGL_ElementCallbackArgument {
 	SGL_Callback callback;
 } SGL_ElementCallbackArgument;
 
-#define SGL_ELEMENT_STYLE_DEFAULT								\
-	.stack		= 0,											\
-	.color		= (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255},	\
-	.units		= 1,											\
-	.gap		= 0,											\
-	.padding	= 0,											\
-	.margin		= 0,											\
-	.border		= 0,											\
-	.border_color = (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255}
-
+#define SGL_ELEMENT_STYLE_DEFAULT	\
+	.stack		= 0,				\
+	.units		= 1,				\
+	.gap		= 0,				\
+	.padding	= 0,				\
+	.margin		= 0,				\
+	.border		= 0,				\
+	.background_color = NULL,		\
+	.border_color = NULL,			\
+	.text_color = NULL
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
@@ -150,7 +120,6 @@ void SGL_ElementDestroy(SGL_Element* target);
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
 void SGL_ElementCalculateSubrects(SGL_Element* target);
-void SGL_ElementRenderSelfAndChildren(SDL_Renderer* renderer, SGL_Element* target);
 
 typedef struct SGL_WindowContext {
 	SGL_Theme theme;
