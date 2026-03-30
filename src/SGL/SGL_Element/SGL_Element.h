@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "../SGL_Vector/SGL_Vector.h"
-#include "../SGL_Lib/SGL_Lib.h"
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
@@ -121,11 +120,13 @@ bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
 void SGL_ElementCalculateSubrects(SGL_Element* target);
 
-typedef struct SGL_WindowContext {
-	SGL_Theme theme;
-} SGL_WindowContext;
-
 SGL_Element* SGL_ElementNew(void* first_arg, ...);
-#define SGL_ELEMENT(...) SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
+
+#define SGL_ELEMENT(...)                                 \
+(                                                       \
+    SGL_PRAGMA_PUSH_WOVERRIDEINIT(),                     \
+    SGL_ElementNew(__VA_ARGS__, (SGL_Element)NULL),     \
+    SGL_PRAGMA_POP_WOVERRIDEINIT()                       \
+)
 
 #endif

@@ -10,23 +10,29 @@
 #include "../SGL_MouseState/SGL_MouseState.h"
 #include "../SGL_Index/SGL_Index.h"
 
+#define SGL_WINDOW_DEFAULT_TITLE "seagull - Jan Grdanjski"
+
 typedef struct SGL_Window {
     SDL_Window* window;
     SDL_Renderer* renderer;
     SGL_Element* root;
     SGL_Index* index;
-    SGL_WindowContext context;
     SGL_MouseState mouse;
     SGL_Theme* theme;
 } SGL_Window;
 
-SGL_Window* SGL_WindowNew();
-void SGL_WindowDestroy(SGL_Window* target);
+//# ----------------
+//  User Interface
+SGL_Window* SGL_Window_New();
+void        SGL_Window_Destroy(SGL_Window* window);
+void        SGL_Window_Mainloop(SGL_Window* window);
 
-void SGL_Window_SetTheme(SGL_Window* target, SGL_Theme* theme);
-void SGL_WindowRender(SGL_Window* target);
-void SGL_WindowMainloop(SGL_Window* target);
-void SGL_Window_UpdateAndIndexTree(SGL_Window* target);
-void SGL_Window_HandleMouseclick(SGL_Window* target, SDL_Event* event);
+void        SGL_Window_SetTheme(SGL_Window* window, SGL_Theme* theme);
+//# ----------------
+
+void SGL_Window_Render(SGL_Window* window);
+void SGL_Window_UpdateAndIndexTree(SGL_Window* window);
+void SGL_Window_HandleMouseclick(SGL_Window* window, SDL_Event* event);
+
 
 #endif 

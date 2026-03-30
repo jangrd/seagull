@@ -1,7 +1,28 @@
 #include "SGL.h"
 
+SDL_Color* SGL_ColorHex(uint32_t hex) {
+	SDL_Color* color = (SDL_Color*)malloc(sizeof(SDL_Color));
+	if (color == NULL) {
+		printf("Malloc fail\n");
+		return NULL;
+	}
+	*color = (SDL_Color) {
+		.r = (hex >> 24) & 0xFF,
+		.g = (hex >> 16) & 0xFF,
+		.b = (hex >> 8) & 0xFF,
+		.a = hex & 0xFF
+	};
+	return color;
+}
+
+void SGL_ExitHandler() {
+    printf("TODO: SGL_ExitHandler\n");
+}
+
 bool SGL_Init(void) {
     SGL_Log_Init();
+    
+    atexit(SGL_ExitHandler);
     
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init failed: \"%s\"\n", SDL_GetError());

@@ -1,7 +1,7 @@
 https://colorhunt.co/palette/1b3c53234c6a456882d2c1b6
 
-
 CODE FIX:
+ !! - cleanse whitespace in whole project
  !! - handle asserts with proper errors
 	- make things that loop through elements use the windows index
 	  so the tree is traversed only once
