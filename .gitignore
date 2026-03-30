@@ -1,5 +1,5 @@
 .backups/
 BUILD/
 fonts/
-sgl-last-run.log
+*.log
 test
