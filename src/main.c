@@ -3,11 +3,14 @@
 void myFunc(SGL_Element* element, void *arg) {
 	SGL_Window* window = (SGL_Window*)arg;
 
-	SGL_ElementAddChild(element, SGL_ELEMENT(
-		SGL_STYLE(
-			.background_color = SGL_ColorHex(0xFF00FFFF),
-			.border = 2
-		))
+	SGL_ElementAddChild(
+		element,
+		SGL_ELEMENT(
+			SGL_STYLE(
+				.background_color = SGL_ColorHex(0xFF00FFFF),
+				.border = 2
+			)
+		)
 	);
 	size_t c = 0;
 	size_t sum = 0;
@@ -23,7 +26,7 @@ int main() {
 
     SGL_Window* window = SGL_Window_New();
     SGL_Theme theme = SGL_THEME_DEFAULT;
-	  SGL_Window_SetTheme(window, &theme);
+	SGL_Window_SetTheme(window, &theme);
 
     SGL_ElementAddChild(
         window->root,
