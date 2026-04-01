@@ -25,6 +25,8 @@ SGL_Window* SGL_Window_New() {
     }
     SDL_SetRenderDrawBlendMode(window->renderer, SDL_BLENDMODE_BLEND);
 
+
+	SGL_Window_SetTheme(window, SGL_THEME_DEFAULT);
     window->root = SGL_ELEMENT(NULL);
     window->index = SGL_IndexNew();
     // under the assumption that failure points of SGL_IndexNew
@@ -39,6 +41,13 @@ SGL_Window* SGL_Window_New() {
     // }
 
     return window;
+}
+
+void SGL_Window_AttachUI(SGL_Window* window, SGL_Element* root) {
+    if (root == NULL) {
+        SGL_Panic("Passed UI root is NULL\n");
+    }
+    window->root = root;
 }
 
 void SGL_Window_Destroy(SGL_Window* window) {
@@ -56,9 +65,7 @@ void SGL_Window_Render(SGL_Window* window) {
     window->root->rect.inner.y = 0;
     window->root->rect.inner.w = width;
     window->root->rect.inner.h = height;
-    // TODO: this should be handled by SGL_Window
-    SGL_ElementCalculateSubrects(window->root);
-
+    
     size_t queue_size = SGL_IndexCount(window->index) + 1024;
     SGL_Element** queue = (SGL_Element**)malloc(queue_size * sizeof(SGL_Element*));
 
@@ -75,10 +82,10 @@ void SGL_Window_Render(SGL_Window* window) {
             if (current->style.border_color == NULL) {
                 SDL_SetRenderDrawColor(
                    window->renderer,
-                   window->theme->color_border.r,
-                   window->theme->color_border.g,
-                   window->theme->color_border.b,
-                   window->theme->color_border.a
+                   window->theme.color_border.r,
+                   window->theme.color_border.g,
+                   window->theme.color_border.b,
+                   window->theme.color_border.a
                );
             } else {
                 SDL_SetRenderDrawColor(
@@ -96,18 +103,18 @@ void SGL_Window_Render(SGL_Window* window) {
                 if (depth % 2 == 1) {
                     SDL_SetRenderDrawColor(
                         window->renderer,
-                        window->theme->color_dark.r,
-                        window->theme->color_dark.g,
-                        window->theme->color_dark.b,
-                        window->theme->color_dark.a
+                        window->theme.color_dark.r,
+                        window->theme.color_dark.g,
+                        window->theme.color_dark.b,
+                        window->theme.color_dark.a
                     );
                 } else {
                     SDL_SetRenderDrawColor(
                         window->renderer,
-                        window->theme->color_light.r,
-                        window->theme->color_light.g,
-                        window->theme->color_light.b,
-                        window->theme->color_light.a
+                        window->theme.color_light.r,
+                        window->theme.color_light.g,
+                        window->theme.color_light.b,
+                        window->theme.color_light.a
                     );
                 }
             } else {
@@ -130,7 +137,7 @@ void SGL_Window_Render(SGL_Window* window) {
     free(queue);
 }
 
-void SGL_Window_SetTheme(SGL_Window* window, SGL_Theme* theme) {
+void SGL_Window_SetTheme(SGL_Window* window, SGL_Theme theme) {
     window->theme = theme;
 }
 
@@ -190,7 +197,7 @@ void SGL_Window_Mainloop(SGL_Window* window) {
     bool running = true;
     SDL_Event event;
     while (running) {
-        SGL_Window_UpdateAndIndexTree(window);
+        SGL_Window_Update(window);
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -208,10 +215,10 @@ void SGL_Window_Mainloop(SGL_Window* window) {
 
         SDL_SetRenderDrawColor(
             window->renderer,
-            window->theme->color_bg.r,
-            window->theme->color_bg.g,
-            window->theme->color_bg.b,
-            window->theme->color_bg.a
+            window->theme.color_bg.r,
+            window->theme.color_bg.g,
+            window->theme.color_bg.b,
+            window->theme.color_bg.a
         );
         SDL_RenderClear(window->renderer);
 
@@ -221,7 +228,7 @@ void SGL_Window_Mainloop(SGL_Window* window) {
     }
 }
 
-void SGL_Window_UpdateAndIndexTree(SGL_Window* window) {
+void SGL_Window_Update(SGL_Window* window) {
     if (window == NULL) return;
 
     size_t stack_size = 1024;
@@ -246,12 +253,53 @@ void SGL_Window_UpdateAndIndexTree(SGL_Window* window) {
             return;
         }
 
+        // DOLE
+        float total_units = 0;
         for (size_t i = 0; i < element->children->count; i++) {
             if (element->children->elements[i] == NULL) {
                 printf("Child %zu is NULL, skipping...\n", i);
                 continue;
             }
             stack[top++] = element->children->elements[i];
+            total_units += element->children->elements[i]->style.units;
+        }
+
+        float used_units = 0;
+        for (size_t i = 0; i < element->children->count; i++) {
+            SGL_Element* child = element->children->elements[i];
+            // TODO: get rid of this if statement
+            // i believe clay solves this by using
+            // along and across direction instead of vertical horizontal
+            if (element->style.stack) {
+                int available_width = element->rect.inner.w - element->style.gap * (element->children->count - 1);
+                child->rect.outer.x = element->rect.inner.x + available_width / total_units * used_units + element->style.gap * i;
+                child->rect.outer.y = element->rect.inner.y;
+                child->rect.outer.w = available_width / total_units * child->style.units;
+                child->rect.outer.h = element->rect.inner.h;
+            }
+            else {
+                int available_height = element->rect.inner.h - element->style.gap * (element->children->count - 1);
+                child->rect.outer.x = element->rect.inner.x;
+                child->rect.outer.y = element->rect.inner.y + available_height / total_units * used_units + element->style.gap * i;
+                child->rect.outer.w = element->rect.inner.w;
+                child->rect.outer.h = available_height / total_units * child->style.units;
+            }
+            child->rect.border.x = child->rect.outer.x + child->style.margin;
+            child->rect.border.y = child->rect.outer.y + child->style.margin;
+            child->rect.border.w = child->rect.outer.w - 2 * child->style.margin;
+            child->rect.border.h = child->rect.outer.h - 2 * child->style.margin;
+    
+            child->rect.main.x = child->rect.border.x + child->style.border;
+            child->rect.main.y = child->rect.border.y + child->style.border;
+            child->rect.main.w = child->rect.border.w - 2 * child->style.border;
+            child->rect.main.h = child->rect.border.h - 2 * child->style.border;
+    
+            child->rect.inner.x = child->rect.main.x + child->style.padding;
+            child->rect.inner.y = child->rect.main.y + child->style.padding;
+            child->rect.inner.w = child->rect.main.w - 2 * child->style.padding;
+            child->rect.inner.h = child->rect.main.h - 2 * child->style.padding;
+    
+            used_units += child->style.units;
         }
 
         if (element->is_new) {

@@ -30,13 +30,9 @@ int main() {
     if (!SGL_Init()) return SGL_FAILURE;
 
     SGL_Window* window = SGL_Window_New();
-    SGL_Theme theme = SGL_THEME_DEFAULT;
-	SGL_Window_SetTheme(window, &theme);
 	
     SGL_UI_START
-    
-    SGL_ElementAddChild(
-        window->root,
+    SGL_Window_AttachUI(window,
         SGL_ELEMENT(
           SGL_STYLE(
             .padding = 200,
@@ -66,10 +62,10 @@ int main() {
           )
         )
     );
-
     SGL_UI_END
 
     SGL_Window_Mainloop(window);
+    
     SGL_Window_Destroy(window);
     SGL_Quit();
     return SGL_SUCCESS;
