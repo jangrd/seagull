@@ -253,7 +253,6 @@ void SGL_Window_Update(SGL_Window* window) {
             return;
         }
 
-        // DOLE
         float total_units = 0;
         for (size_t i = 0; i < element->children->count; i++) {
             if (element->children->elements[i] == NULL) {

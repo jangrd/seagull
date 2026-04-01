@@ -109,7 +109,6 @@ typedef struct SGL_Element {
 void SGL_ElementDestroy(SGL_Element* target);
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
-void SGL_ElementCalculateSubrects(SGL_Element* target);
 
 SGL_Element* SGL_ElementNew(void* first_arg, ...);
 
