@@ -18,4 +18,31 @@ void SGL_ExitHandler();
 bool SGL_Init(void);
 void SGL_Quit(void);
 
+
+#if defined(_MSC_VER)
+  #define SGL_UI_START __pragma(warning(push))
+  #define SGL_UI_END   __pragma(warning(pop))
+
+#elif defined(__clang__)
+  #define SGL_UI_START \
+    _Pragma("clang diagnostic push") \
+    _Pragma("clang diagnostic ignored \"-Woverride-init\"") \
+    _Pragma("clang diagnostic ignored \"-Woverride-init-side-effects\"")
+  #define SGL_UI_END \
+    _Pragma("clang diagnostic pop")
+
+#elif defined(__GNUC__)
+  #define SGL_UI_START \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Woverride-init\"") \
+    _Pragma("GCC diagnostic ignored \"-Woverride-init-side-effects\"")
+  #define SGL_UI_END \
+    _Pragma("GCC diagnostic pop")
+
+#else
+  #define SGL_UI_START
+  #define SGL_UI_END
+#endif
+
+
 #endif

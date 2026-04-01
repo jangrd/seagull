@@ -3,6 +3,8 @@
 void myFunc(SGL_Element* element, void *arg) {
 	SGL_Window* window = (SGL_Window*)arg;
 
+    SGL_UI_START
+
 	SGL_ElementAddChild(
 		element,
 		SGL_ELEMENT(
@@ -12,6 +14,9 @@ void myFunc(SGL_Element* element, void *arg) {
 			)
 		)
 	);
+
+    SGL_UI_END
+	
 	size_t c = 0;
 	size_t sum = 0;
 	for (SGL_IndexNode* node = window->index->first; node != NULL; node = node->next) {
@@ -27,7 +32,9 @@ int main() {
     SGL_Window* window = SGL_Window_New();
     SGL_Theme theme = SGL_THEME_DEFAULT;
 	SGL_Window_SetTheme(window, &theme);
-
+	
+    SGL_UI_START
+    
     SGL_ElementAddChild(
         window->root,
         SGL_ELEMENT(
@@ -59,6 +66,8 @@ int main() {
           )
         )
     );
+
+    SGL_UI_END
 
     SGL_Window_Mainloop(window);
     SGL_Window_Destroy(window);
