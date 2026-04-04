@@ -20,9 +20,9 @@ tmux send-keys -t seagull:3 "$EDITOR src/SGL/SGL_Element/SGL_Element.c" C-m
 tmux split-window -h
 tmux send-keys -t seagull:3.1 "$EDITOR src/SGL/SGL_Element/SGL_Element.h" C-m
 
-tmux new-window -t seagull:4 -n "index"
-tmux send-keys -t seagull:4 "$EDITOR src/SGL/SGL_Index/SGL_Index.c" C-m
+tmux new-window -t seagull:4 -n "page"
+tmux send-keys -t seagull:4 "$EDITOR src/SGL/SGL_Page/SGL_Page.c" C-m
 tmux split-window -h
-tmux send-keys -t seagull:4.1 "$EDITOR src/SGL/SGL_Index/SGL_Index.h" C-m
+tmux send-keys -t seagull:4.1 "$EDITOR src/SGL/SGL_Page/SGL_Page.h" C-m
 
 tmux attach -t seagull

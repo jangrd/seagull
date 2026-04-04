@@ -15,10 +15,11 @@
 typedef struct SGL_Window {
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SGL_Element* root;
-    SGL_Index* index;
     SGL_MouseState mouse;
-    SGL_Theme theme;
+    
+    // SGL_Element* root;
+    // SGL_Index* index;
+    // SGL_Theme theme;
 } SGL_Window;
 
 //# ----------------

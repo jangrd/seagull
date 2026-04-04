@@ -23,7 +23,8 @@ build_source() {
 		$SOURCE/SGL/SGL_Element/SGL_Element.c 			\
 		$SOURCE/SGL/SGL_Vector/SGL_Vector.c 			\
 		$SOURCE/SGL/SGL_Log/SGL_Log.c					\
-		$SOURCE/SGL/SGL_Index/SGL_Index.c
+		$SOURCE/SGL/SGL_Index/SGL_Index.c               \
+		$SOURCE/SGL/SGL_Page/SGL_Page.c
 }
 
 run_if_exists() {
