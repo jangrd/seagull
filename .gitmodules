@@ -1,0 +1,3 @@
+[submodule "external/LJG"]
+	path = external/LJG
+	url = https://github.com/jangrd/LJG.git
