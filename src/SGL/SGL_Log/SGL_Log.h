@@ -19,19 +19,23 @@ void SGL_LogVA(const char* fmt, va_list args);
     SGL_Print(fmt, ##__VA_ARGS__)
 
 #ifndef SGL_PROD
-#define SGL_Panic(fmt, ...) \
-    fprintf(stderr, "%s", SGL_PANIC_PREFIX); \
-    SGL_Print(                                 \
-        "%s:%d\n\t" fmt,                       \
-        __FILE__, __LINE__,                    \
-        ##__VA_ARGS__                          \
-    );                                         \
-    exit(EXIT_FAILURE)
+#define SGL_Panic(fmt, ...)                         \
+    do {                                            \
+        fprintf(stderr, "%s", SGL_PANIC_PREFIX);    \
+        SGL_Print(                                  \
+            "%s:%d\n\t" fmt,                        \
+            __FILE__, __LINE__,                     \
+            ##__VA_ARGS__                           \
+        );                                          \
+        exit(EXIT_FAILURE);                         \
+    } while(0)
 #else
-#define SGL_Panic(fmt, ...)        \
-    fprintf(stderr, "%s", SGL_PANIC_PREFIX); \
-    SGL_Print(fmt, ##__VA_ARGS__);             \
-    exit(EXIT_FAILURE)
+#define SGL_Panic(fmt, ...)                         \
+    do {                                            \
+        fprintf(stderr, "%s", SGL_PANIC_PREFIX);    \
+        SGL_Print(fmt, ##__VA_ARGS__);              \
+        exit(EXIT_FAILURE);                         \
+    } while(0)
 #endif
 
 

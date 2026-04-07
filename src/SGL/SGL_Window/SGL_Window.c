@@ -25,29 +25,25 @@ SGL_Window* SGL_Window_New() {
     }
     SDL_SetRenderDrawBlendMode(window->renderer, SDL_BLENDMODE_BLEND);
 
-
-	SGL_Window_SetTheme(window, SGL_THEME_DEFAULT);
-    window->root = SGL_ELEMENT(NULL);
-    window->index = SGL_IndexNew();
-    // under the assumption that failure points of SGL_IndexNew
-    // are handled by SGL_Panic as it is at the time im writing this
-    // then the following code is unneeded
-    // 
-    // if (window->index == NULL) {
-    //     SDL_DestroyWindow(window->window);
-    //     free(window);
-    //     SGL_Panic("SGL_WindowNew(): creation failed due to lack of memory");
-    //     return NULL;
-    // }
+    // TODO: worst code memory-wise in a while
+    window->pages = NULL;
+    LJG_MetaVec_Push(window->pages, SGL_PageNew());
+    printf(
+        "Page %p:\n\t%p %p %p\n",
+        (void*) &(window->pages[0]),
+        (void*) window->pages[0].root,
+        (void*) window->pages[0].index,
+        (void*) &(window->pages[0].theme)
+    );
 
     return window;
 }
 
-void SGL_Window_AttachUI(SGL_Window* window, SGL_Element* root) {
-    if (root == NULL) {
-        SGL_Panic("Passed UI root is NULL\n");
-    }
-    window->root = root;
+// returns NULL incase of error
+SGL_Page* SGL_Window_GetCurrentPage(SGL_Window* window) {
+    if (window == NULL) return NULL;
+    if (window->pages == NULL) return NULL;
+    return &(window->pages[window->current_page_index]);
 }
 
 void SGL_Window_Destroy(SGL_Window* window) {
@@ -61,18 +57,20 @@ void SGL_Window_Render(SGL_Window* window) {
     if(!SDL_GetRenderOutputSize(window->renderer, &width, &height)) {
         SGL_Panic("SDL_GetRenderOutputSize failed: \"%s\"\n", SDL_GetError());
     }
-    window->root->rect.inner.x = 0;
-    window->root->rect.inner.y = 0;
-    window->root->rect.inner.w = width;
-    window->root->rect.inner.h = height;
+    SGL_Page* page = SGL_Window_GetCurrentPage(window);
     
-    size_t queue_size = SGL_IndexCount(window->index) + 1024;
+    page->root->rect.inner.x = 0;
+    page->root->rect.inner.y = 0;
+    page->root->rect.inner.w = width;
+    page->root->rect.inner.h = height;
+    
+    size_t queue_size = SGL_IndexCount(page->index) + 1024;
     SGL_Element** queue = (SGL_Element**)malloc(queue_size * sizeof(SGL_Element*));
 
     size_t first = 0;
     size_t last = 0;
     size_t depth = 0;
-    queue[last++] = window->root;
+    queue[last++] = page->root;
     do {
         size_t level_size = last - first;
         for (size_t i = 0; i < level_size; i++) {
@@ -82,10 +80,10 @@ void SGL_Window_Render(SGL_Window* window) {
             if (current->style.border_color == NULL) {
                 SDL_SetRenderDrawColor(
                    window->renderer,
-                   window->theme.color_border.r,
-                   window->theme.color_border.g,
-                   window->theme.color_border.b,
-                   window->theme.color_border.a
+                   page->theme.color_border.r,
+                   page->theme.color_border.g,
+                   page->theme.color_border.b,
+                   page->theme.color_border.a
                );
             } else {
                 SDL_SetRenderDrawColor(
@@ -103,18 +101,18 @@ void SGL_Window_Render(SGL_Window* window) {
                 if (depth % 2 == 1) {
                     SDL_SetRenderDrawColor(
                         window->renderer,
-                        window->theme.color_dark.r,
-                        window->theme.color_dark.g,
-                        window->theme.color_dark.b,
-                        window->theme.color_dark.a
+                        page->theme.color_dark.r,
+                        page->theme.color_dark.g,
+                        page->theme.color_dark.b,
+                        page->theme.color_dark.a
                     );
                 } else {
                     SDL_SetRenderDrawColor(
                         window->renderer,
-                        window->theme.color_light.r,
-                        window->theme.color_light.g,
-                        window->theme.color_light.b,
-                        window->theme.color_light.a
+                        page->theme.color_light.r,
+                        page->theme.color_light.g,
+                        page->theme.color_light.b,
+                        page->theme.color_light.a
                     );
                 }
             } else {
@@ -138,12 +136,15 @@ void SGL_Window_Render(SGL_Window* window) {
 }
 
 void SGL_Window_SetTheme(SGL_Window* window, SGL_Theme theme) {
-    window->theme = theme;
+    for (size_t i = 0; i < LJG_MetaVec_Len(window->pages); i++) {
+        SGL_Page_SetTheme(&window->pages[i], theme);
+    }
 }
 
 void SGL_Window_HandleMouseclick(SGL_Window* window, SDL_Event* event) {
     SGL_Element* clicked_element = NULL;
-    SGL_IndexNode* node = window->index->first;
+    SGL_Page* page = SGL_Window_GetCurrentPage(window);
+    SGL_IndexNode* node = page->index->first;
 
     // TODO: oktrij jel ovo moguce
     if (node == NULL) {
@@ -213,12 +214,16 @@ void SGL_Window_Mainloop(SGL_Window* window) {
             }
         }
 
+        if (LJG_MetaVec_Len(window->pages) == 0) {
+            SGL_Panic("No pages exist on window");
+        }
+
         SDL_SetRenderDrawColor(
             window->renderer,
-            window->theme.color_bg.r,
-            window->theme.color_bg.g,
-            window->theme.color_bg.b,
-            window->theme.color_bg.a
+            window->pages[0].theme.color_bg.r,
+            window->pages[0].theme.color_bg.g,
+            window->pages[0].theme.color_bg.b,
+            window->pages[0].theme.color_bg.a
         );
         SDL_RenderClear(window->renderer);
 
@@ -230,20 +235,21 @@ void SGL_Window_Mainloop(SGL_Window* window) {
 
 void SGL_Window_Update(SGL_Window* window) {
     if (window == NULL) return;
+    SGL_Page* page = SGL_Window_GetCurrentPage(window);
 
     size_t stack_size = 1024;
     SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));
     if (stack == NULL) return;
     size_t top = 0;
-    stack[top++] = window->root;
+    stack[top++] = page->root;
 
     // TODO: otkrij jel potrebno
-    if (window->index == NULL) {
+    if (page->index == NULL) {
         SGL_Panic("window->index == NULL\n");
         return;
     }
     
-    SGL_IndexNode* current_node = window->index->first;
+    SGL_IndexNode* current_node = page->index->first;
     while (top > 0) {
         SGL_Element* element = stack[--top];
 
@@ -303,7 +309,7 @@ void SGL_Window_Update(SGL_Window* window) {
 
         if (element->is_new) {
             if (current_node == NULL) {
-                if (SGL_IndexAppend(window->index, element)) {
+                if (SGL_IndexAppend(page->index, element)) {
                     SGL_Panic("Ran out of memory\n");
                     exit(EXIT_FAILURE);
                 }

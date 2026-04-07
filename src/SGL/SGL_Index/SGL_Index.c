@@ -6,7 +6,6 @@ SGL_Index* SGL_IndexNew() {
     SGL_Index* target = (SGL_Index*)malloc(sizeof(SGL_Index));
     if (target == NULL) {
         SGL_Panic("No memory available");
-        // return NULL;
     }
     target->first = NULL;
     return target;
@@ -56,4 +55,18 @@ bool SGL_IndexAppend(SGL_Index* index, SGL_Element* element) {
     }
 
     return SGL_IndexInsert(node, element);
+}
+
+void SGL_Index_Destroy(SGL_Index* index) {
+    if (index == NULL) {
+        SGL_Log("SGL_Index_Destroy(SGL_Index* index) was passed NULL. Ignoring...");
+        return;
+    }
+    SGL_IndexNode* node = index->first;
+    SGL_IndexNode* next = NULL;
+    while (node->next != NULL) {
+        next = node->next;
+        free(node);
+        node = next;
+    }
 }

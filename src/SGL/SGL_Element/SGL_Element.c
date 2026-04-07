@@ -65,9 +65,18 @@ SGL_Element* SGL_ElementNew(void* first_arg, ...) {
     return target;
 }
 
-void SGL_ElementDestroy(SGL_Element* target) {
-    free(target);
-    target = NULL;
+void SGL_ElementDestroy(SGL_Element* element) {
+    if (element == NULL) {
+        SGL_Log("SGL_ElementDestroy(SGL_Element* element) was passed NULL. Ignoring...");
+        return;
+    }
+    if (element->children == NULL) return;
+    for (size_t i = 0; i < element->children->count; i++) {
+        SGL_Element* child = element->children->elements[i];
+        if (child == NULL) continue;
+        SGL_ElementDestroy(child);
+    }
+    free(element);
 }
 
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y) {

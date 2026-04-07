@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+
+#include "../../external/LJG/LJG_Vector.h"
+
 #include "./SGL_Window/SGL_Window.h"
 #include "./SGL_Log/SGL_Log.h"
 #include "./SGL_Theme/SGL_Theme.h"

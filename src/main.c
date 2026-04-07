@@ -19,7 +19,8 @@ void myFunc(SGL_Element* element, void *arg) {
 	
 	size_t c = 0;
 	size_t sum = 0;
-	for (SGL_IndexNode* node = window->index->first; node != NULL; node = node->next) {
+	SGL_Page* page = SGL_Window_GetCurrentPage(window);
+	for (SGL_IndexNode* node = page->index->first; node != NULL; node = node->next) {
 		sum += sizeof(*node->element) + sizeof(*node->element->children);
 		c++;
 	}
@@ -30,9 +31,10 @@ int main() {
     if (!SGL_Init()) return SGL_FAILURE;
 
     SGL_Window* window = SGL_Window_New();
-	
+
     SGL_UI_START
-    SGL_Window_AttachUI(window,
+    SGL_Page_AttachUI(
+        SGL_Window_GetCurrentPage(window),    
         SGL_ELEMENT(
           SGL_STYLE(
             .padding = 200,
