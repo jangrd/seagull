@@ -8,13 +8,12 @@
 #include "../SGL_Index/SGL_Index.h"
 
 typedef struct {
-    // SGL_Element root; 
     SGL_Element* root;
     SGL_Index* index;
     SGL_Theme theme;
 } SGL_Page;
 
-SGL_Page* SGL_Page_New();
+SGL_Page SGL_Page_New();
 void SGL_Page_AttachUI(SGL_Page* page, SGL_Element* element);
 void SGL_Page_Destroy(SGL_Page* page);
 

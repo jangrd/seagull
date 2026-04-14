@@ -28,6 +28,8 @@ SGL_Window* SGL_Window_New() {
     // TODO: worst code memory-wise in a while
     window->pages = NULL;
     LJG_MetaVec_Push(window->pages, SGL_PageNew());
+    SGL_Log("Vector size after push: %zu\n", LJG_MetaVec_Len(window->pages));
+    window->current_page_index = 0;
     printf(
         "Page %p:\n\t%p %p %p\n",
         (void*) &(window->pages[0]),

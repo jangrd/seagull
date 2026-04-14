@@ -19,11 +19,13 @@ typedef struct SGL_Window {
     SDL_Window* window;
     SDL_Renderer* renderer;
     SGL_MouseState mouse;
-    SGL_Page* pages;
-    size_t current_page_index;
+
     // SGL_Element* root;
     // SGL_Index* index;
     // SGL_Theme theme;
+    SGL_Page* pages;
+    size_t current_page_index;
+    
 } SGL_Window;
 
 //# ----------------

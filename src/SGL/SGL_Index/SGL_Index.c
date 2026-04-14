@@ -62,11 +62,19 @@ void SGL_Index_Destroy(SGL_Index* index) {
         SGL_Log("SGL_Index_Destroy(SGL_Index* index) was passed NULL. Ignoring...");
         return;
     }
+    
     SGL_IndexNode* node = index->first;
+    if (node == NULL) {
+        SGL_Log("SGL_Index_Destroy(SGL_Index* index) index is empty. Ignoring... ");
+        // free(index);
+        return;
+    }
+    
     SGL_IndexNode* next = NULL;
     while (node->next != NULL) {
         next = node->next;
         free(node);
         node = next;
     }
+    free(index);
 }
