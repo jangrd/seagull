@@ -25,10 +25,12 @@ SGL_Window* SGL_Window_New() {
     }
     SDL_SetRenderDrawBlendMode(window->renderer, SDL_BLENDMODE_BLEND);
 
-    // TODO: worst code memory-wise in a while
     window->pages = NULL;
+    LJG_MetaVec_Init(window->pages, 1);
     LJG_MetaVec_Push(window->pages, SGL_Page_New());
+
     SGL_Log("Vector size after push: %zu\n", LJG_MetaVec_Len(window->pages));
+
     window->current_page_index = 0;
     
     return window;

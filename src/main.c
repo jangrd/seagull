@@ -3,8 +3,9 @@
 void myFunc(SGL_Element* element, void *arg) {
 	SGL_Window* window = (SGL_Window*)arg;
 
+    for (size_t i = 0; i < 60; i++) {
+    
     SGL_UI_START
-
 	SGL_ElementAddChild(
 		element,
 		SGL_ELEMENT(
@@ -14,8 +15,8 @@ void myFunc(SGL_Element* element, void *arg) {
 			)
 		)
 	);
-
     SGL_UI_END
+    }
 	
 	size_t c = 0;
 	size_t sum = 0;
