@@ -27,17 +27,10 @@ SGL_Window* SGL_Window_New() {
 
     // TODO: worst code memory-wise in a while
     window->pages = NULL;
-    LJG_MetaVec_Push(window->pages, SGL_PageNew());
+    LJG_MetaVec_Push(window->pages, SGL_Page_New());
     SGL_Log("Vector size after push: %zu\n", LJG_MetaVec_Len(window->pages));
     window->current_page_index = 0;
-    printf(
-        "Page %p:\n\t%p %p %p\n",
-        (void*) &(window->pages[0]),
-        (void*) window->pages[0].root,
-        (void*) window->pages[0].index,
-        (void*) &(window->pages[0].theme)
-    );
-
+    
     return window;
 }
 
@@ -51,6 +44,9 @@ SGL_Page* SGL_Window_GetCurrentPage(SGL_Window* window) {
 void SGL_Window_Destroy(SGL_Window* window) {
     SDL_DestroyRenderer(window->renderer);
     SDL_DestroyWindow(window->window);
+    if (window->pages != NULL) {
+        LJG_MetaVec_Free(window->pages);
+    }
     free(window);
 }
 
