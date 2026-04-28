@@ -14,10 +14,10 @@ void SGL_Page_Destroy(SGL_Page* page) {
         return;
     }
     SGL_Index_Destroy(page->index);
-    SGL_ElementDestroy(page->root);
+    SGL_Element_Destroy(&(page->root));
 }
 
-void SGL_Page_AttachUI(SGL_Page* page, SGL_Element* element) {
+void SGL_Page_AttachUI(SGL_Page* page, SGL_Element element) {
     if (page == NULL) {
         SGL_Panic("User error, page is NULL");
     }

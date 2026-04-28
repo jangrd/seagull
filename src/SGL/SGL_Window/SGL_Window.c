@@ -30,7 +30,6 @@ SGL_Window* SGL_Window_New() {
     LJG_MetaVec_Push(window->pages, SGL_Page_New());
 
     SGL_Log("Vector size after push: %zu\n", LJG_MetaVec_Len(window->pages));
-
     window->current_page_index = 0;
     
     return window;
@@ -59,18 +58,18 @@ void SGL_Window_Render(SGL_Window* window) {
     }
     SGL_Page* page = SGL_Window_GetCurrentPage(window);
     
-    page->root->rect.inner.x = 0;
-    page->root->rect.inner.y = 0;
-    page->root->rect.inner.w = width;
-    page->root->rect.inner.h = height;
+    page->root.rect.inner.x = 0;
+    page->root.rect.inner.y = 0;
+    page->root.rect.inner.w = width;
+    page->root.rect.inner.h = height;
     
-    size_t queue_size = SGL_IndexCount(page->index) + 1024;
-    SGL_Element** queue = (SGL_Element**)malloc(queue_size * sizeof(SGL_Element*));
+    SGL_Element** queue = NULL;
+    LJG_MetaVec_Init(queue, SGL_IndexCount(page->index));
 
     size_t first = 0;
-    size_t last = 0;
     size_t depth = 0;
-    queue[last++] = page->root;
+    LJG_MetaVec_Push(queue, &(page->root));
+    size_t last = LJG_MetaVec_Len(queue) - 1;
     do {
         size_t level_size = last - first;
         for (size_t i = 0; i < level_size; i++) {
@@ -125,14 +124,13 @@ void SGL_Window_Render(SGL_Window* window) {
                );
             }
             SDL_RenderFillRect(window->renderer, &(current->rect.main));
-                          
-            for (size_t j = 0; j < current->children->count; j++) {
-                queue[last++] = current->children->elements[j];
+            for (size_t j = 0; j < LJG_MetaVec_Len(current->children); j++) {
+                queue[last++] = &(current->children[j]);
             }
         }
         depth++;
     } while (first != last);
-    free(queue);
+    LJG_MetaVec_Free(queue);
 }
 
 void SGL_Window_SetTheme(SGL_Window* window, SGL_Theme theme) {
@@ -241,7 +239,7 @@ void SGL_Window_Update(SGL_Window* window) {
     SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));
     if (stack == NULL) return;
     size_t top = 0;
-    stack[top++] = page->root;
+    stack[top++] = &(page->root);
 
     // TODO: otkrij jel potrebno
     if (page->index == NULL) {
@@ -260,30 +258,26 @@ void SGL_Window_Update(SGL_Window* window) {
         }
 
         float total_units = 0;
-        for (size_t i = 0; i < element->children->count; i++) {
-            if (element->children->elements[i] == NULL) {
-                printf("Child %zu is NULL, skipping...\n", i);
-                continue;
-            }
-            stack[top++] = element->children->elements[i];
-            total_units += element->children->elements[i]->style.units;
+        for (size_t i = 0; i < LJG_MetaVec_Len(element->children); i++) {
+            stack[top++] = &(element->children[i]);
+            total_units += element->children[i].style.units;
         }
 
         float used_units = 0;
-        for (size_t i = 0; i < element->children->count; i++) {
-            SGL_Element* child = element->children->elements[i];
+        for (size_t i = 0; i < LJG_MetaVec_Len(element->children); i++) {
+            SGL_Element* child = &(element->children[i]);
             // TODO: get rid of this if statement
             // i believe clay solves this by using
             // along and across direction instead of vertical horizontal
             if (element->style.stack) {
-                int available_width = element->rect.inner.w - element->style.gap * (element->children->count - 1);
+                int available_width = element->rect.inner.w - element->style.gap * (LJG_MetaVec_Len(element->children) - 1);
                 child->rect.outer.x = element->rect.inner.x + available_width / total_units * used_units + element->style.gap * i;
                 child->rect.outer.y = element->rect.inner.y;
                 child->rect.outer.w = available_width / total_units * child->style.units;
                 child->rect.outer.h = element->rect.inner.h;
             }
             else {
-                int available_height = element->rect.inner.h - element->style.gap * (element->children->count - 1);
+                int available_height = element->rect.inner.h - element->style.gap * (LJG_MetaVec_Len(element->children) - 1);
                 child->rect.outer.x = element->rect.inner.x;
                 child->rect.outer.y = element->rect.inner.y + available_height / total_units * used_units + element->style.gap * i;
                 child->rect.outer.w = element->rect.inner.w;

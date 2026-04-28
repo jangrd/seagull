@@ -1,6 +1,7 @@
 #ifndef __SGL_CALLBACK_H__
 #define __SGL_CALLBACK_H__
 
+typedef struct SGL_Element SGL_Element;
 #include "../SGL_Element/SGL_Element.h"
 
 typedef enum SGL_CallbackType {

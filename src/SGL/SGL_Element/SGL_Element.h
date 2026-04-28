@@ -6,10 +6,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
-#include "../SGL_Vector/SGL_Vector.h"
+// #include "../SGL_Vector/SGL_Vector.h"
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
+
+#define LJG_IMPLEMENTATION // TODO: i dont remember implementing this but okay?
+#include "../../../external/LJG/LJG_MetaVec.h"
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
@@ -37,6 +40,15 @@ typedef struct SGL_ElementStyle {
        float border;
 } SGL_ElementStyle;
 
+typedef struct SGL_Element {
+    SGL_ElementRect rect;
+    SGL_ElementStyle style;
+    struct SGL_Element* children; // LJG_MetaVec
+    SGL_Callback on_click;
+    // TODO: turn these bools into unified state
+    bool is_new;
+} SGL_Element;
+
 typedef enum {
     SGL_TYPE_STYLE,
     SGL_TYPE_CHILD,
@@ -49,19 +61,19 @@ typedef struct SGL_ElementBaseArgument {
 
 typedef struct SGL_ElementStyleArgument {
     SGL_ElementArgumentType type;
-    SGL_ElementStyle style;
+    SGL_ElementStyle        style;
 } SGL_ElementStyleArgument;
 
 typedef struct SGL_ElementChildArgument {
-    SGL_ElementArgumentType    type;
-    SGL_Element**            children;
-    size_t                    count;
+    SGL_ElementArgumentType type;
+    SGL_Element*            children;
+    size_t                  count;
 } SGL_ElementChildArgument;
 
 typedef struct SGL_ElementCallbackArgument {
     SGL_ElementArgumentType type;
-    SGL_CallbackType callback_type;
-    SGL_Callback callback;
+    SGL_CallbackType        callback_type;
+    SGL_Callback            callback;
 } SGL_ElementCallbackArgument;
 
 #define SGL_ELEMENT_STYLE_DEFAULT    \
@@ -86,8 +98,8 @@ typedef struct SGL_ElementCallbackArgument {
 #define SGL_CHILDREN(...)                                                                \
     &(SGL_ElementChildArgument) {                                                        \
         .type        = SGL_TYPE_CHILD,                                                    \
-        .children    = (SGL_Element*[]){ __VA_ARGS__ },                                    \
-        .count        = sizeof((SGL_Element*[]){ __VA_ARGS__ }) / sizeof(SGL_Element*)    \
+        .children    = (SGL_Element[]){ __VA_ARGS__ },                                    \
+        .count        = sizeof((SGL_Element[]){ __VA_ARGS__ }) / sizeof(SGL_Element)    \
     }
 
 #define SGL_ONCLICK(func, args) \
@@ -96,23 +108,15 @@ typedef struct SGL_ElementCallbackArgument {
         .callback_type = SGL_CALLBACK_ONCLICK, \
         .callback = SGL_CALLBACK(func, args) \
     }
-
-typedef struct SGL_Element {
-    SGL_ElementRect rect;
-    SGL_ElementStyle style;
-    SGL_Vector* children;
-    SGL_Callback on_click;
-    // TODO: turn these bools into unified state
-    bool is_new;
-} SGL_Element;
-
-void SGL_ElementDestroy(SGL_Element* target);
+    
+SGL_Element SGL_Element_New(void* first_arg, ...);
+void SGL_Element_Destroy(SGL_Element* target);
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
-void SGL_ElementAddChild(SGL_Element* parent, SGL_Element* child);
+void SGL_ElementAddChild(SGL_Element* parent, SGL_Element child);
 
-SGL_Element* SGL_ElementNew(void* first_arg, ...);
 
 #define SGL_ELEMENT(...) \
-    SGL_ElementNew(__VA_ARGS__, (SGL_Element*)NULL)
+    SGL_Element_New(__VA_ARGS__, (SGL_Element*)NULL)
 
 #endif
+

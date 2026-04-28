@@ -33,12 +33,15 @@ int main() {
 
     SGL_Window* window = SGL_Window_New();
 
+    SDL_Color test = (SDL_Color){255, 0, 0, 255};
+
     SGL_UI_START
     SGL_Page_AttachUI(
         SGL_Window_GetCurrentPage(window),    
         SGL_ELEMENT(
           SGL_STYLE(
             .padding = 200,
+            .background_color = &test,
             .stack = SGL_STACK_HORIZONTAL
           ),
           SGL_CHILDREN(
