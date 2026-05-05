@@ -7,12 +7,9 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
     
     SGL_Element element;
 
-    element.children = NULL;
-    LJG_MetaVec_Init(element.children, 4);
-    if (errno == ENOMEM) {
-        SGL_Panic("Ran out of memory");
-    }
-    
+    _SGL_Page_Subtree subtree;
+    subtree.size = 1;
+
     element.on_click = (SGL_Callback){NULL, NULL};
 
     va_list args;
@@ -32,10 +29,7 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
                 break;
                 
             case SGL_TYPE_CHILD:
-                SGL_ElementChildArgument* child_arg = arg;
-                for (size_t i = 0; i < child_arg->count; i++) {
-                    SGL_ElementAddChild(&element, child_arg->children[i]);
-                }
+                subtree.size++;
                 break;
             case SGL_TYPE_CALLBACK:
                 SGL_ElementCallbackArgument* callback_arg = arg;
@@ -61,17 +55,14 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
         SGL_Panic("Ran out of memory");
     }
 
-    return LJG_MetaVec_Len(page->arena) - 1;
+    size_t index = LJG_MetaVec_Len(page->arena) - 1;
+    subtree.index = index;
+
+    LJG_MetaVec_Push(page->tree, subtree);
+    
+    return index;
 }
 
-void SGL_Element_Destroy(SGL_Element* element) {
-    if (element == NULL) {
-        SGL_Log("SGL_ElementDestroy(SGL_Element* element) was passed NULL. Ignoring...");
-        return;
-    }
-    if (element->children == NULL) return;
-    LJG_MetaVec_Free(element->children);
-}
 
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y) {
     return (
@@ -88,3 +79,4 @@ bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y) {
 //         SGL_Panic("SGL_Element_AddChild(): ran out of memory");
 //     }
 // }
+

@@ -9,15 +9,21 @@
 
 #include <SDL3/SDL.h>
 
+typedef struct SGL_Element SGL_Element;
+
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
 #include "../SGL_Page/SGL_Page.h"
-// TODO: ??
-#include "../SGL_Index/SGL_Index.h"
 
 #define LJG_IMPLEMENTATION // TODO: i dont remember implementing this but okay?
 #include "../../../external/LJG/LJG_MetaVec.h"
+
+// TODO: duplicate of SGL_Page.h definition
+typedef struct {
+    size_t index;
+    size_t size;
+} _SGL_Page_Subtree;
 
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
@@ -49,8 +55,6 @@ typedef struct SGL_Element {
     SGL_ElementRect rect;
     SGL_ElementStyle style;
     SGL_Callback on_click;
-    // LJG_MetaVec of indexes into SGL_Page.arena
-    size_t* children;
     bool is_new;
 } SGL_Element;
 
@@ -71,7 +75,7 @@ typedef struct SGL_ElementStyleArgument {
 
 typedef struct SGL_ElementChildArgument {
     SGL_ElementArgumentType type;
-    SGL_Element*            children;
+    size_t*                 children_ids; // LJG_MetaVec
     size_t                  count;
 } SGL_ElementChildArgument;
 
@@ -100,9 +104,9 @@ typedef struct SGL_ElementCallbackArgument {
 
 #define SGL_CHILDREN(...)                                                                \
     &(SGL_ElementChildArgument) {                                                        \
-        .type        = SGL_TYPE_CHILD,                                                    \
-        .children    = (size_t[]){ __VA_ARGS__ },                                    \
-        .count       = sizeof((size_t[]){ __VA_ARGS__ }) / sizeof(size_t)    \
+        .type           = SGL_TYPE_CHILD,                                                    \
+        .children_ids   = (size_t[]){ __VA_ARGS__ },                                    \
+        .count          = sizeof((size_t[]){ __VA_ARGS__ }) / sizeof(size_t)    \
     }
 
 #define SGL_ONCLICK(func, args) \
@@ -113,10 +117,7 @@ typedef struct SGL_ElementCallbackArgument {
     }
     
 size_t SGL_Element_New(SGL_Page* page, ...);
-void SGL_Element_Destroy(SGL_Element* target);
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
-void SGL_ElementAddChild(SGL_Element* parent, SGL_Element child);
-
 
 #define SGL_ELEMENT(...) \
     SGL_Element_New(&(window->pages[window->current_page_index]), __VA_ARGS__, (SGL_Element*)NULL)

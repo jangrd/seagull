@@ -4,18 +4,18 @@ void myFunc(SGL_Element* element, void *arg) {
 	SGL_Window* window = (SGL_Window*)arg;
 
     for (size_t i = 0; i < 60; i++) {
-    
-    SGL_UI_START
-	SGL_ElementAddChild(
-		element,
-		SGL_ELEMENT(
-			SGL_STYLE(
-				.background_color = SGL_ColorHex(0xFF00FFFF),
-				.border = 2
-			)
-		)
-	);
-    SGL_UI_END
+ //    
+ //    SGL_UI_START
+	// SGL_ElementAddChild(
+	// 	element,
+	// 	SGL_ELEMENT(
+	// 		SGL_STYLE(
+	// 			.background_color = SGL_ColorHex(0xFF00FFFF),
+	// 			.border = 2
+	// 		)
+	// 	)
+	// );
+ //    SGL_UI_END
     }
 	
 	size_t c = 0;
