@@ -1,12 +1,14 @@
 #include "SGL_Element.h"
 
-SGL_Element SGL_Element_New(void* first_arg, ...) {
-    // TODO: check for first_arg being NULL
-
+size_t SGL_Element_New(SGL_Page* page, ...) {
+    if (page == NULL) {
+        SGL_Panic("SGL_Element_New(): parameter page cannot be NULL");
+    }
+    
     SGL_Element element;
 
     element.children = NULL;
-    LJG_MetaVec_Init(element.children, 16);
+    LJG_MetaVec_Init(element.children, 4);
     if (errno == ENOMEM) {
         SGL_Panic("Ran out of memory");
     }
@@ -14,9 +16,9 @@ SGL_Element SGL_Element_New(void* first_arg, ...) {
     element.on_click = (SGL_Callback){NULL, NULL};
 
     va_list args;
-    va_start(args, first_arg);
+    va_start(args, page);
     bool style_set = false;    
-    for (void* arg = first_arg; arg != NULL; arg = va_arg(args, void*)) {
+    for (void* arg = page; arg != NULL; arg = va_arg(args, void*)) {
         SGL_ElementBaseArgument* base = arg;
         switch (base->type) {
             case SGL_TYPE_STYLE:
@@ -53,8 +55,13 @@ SGL_Element SGL_Element_New(void* first_arg, ...) {
     assert(element.style.padding >= 0.0);
     assert(element.style.margin  >= 0.0);
     assert(element.style.border  >= 0.0);
-    
-    return element;
+
+    LJG_MetaVec_Push(page->arena, element);
+    if (errno == ENOMEM) {
+        SGL_Panic("Ran out of memory");
+    }
+
+    return LJG_MetaVec_Len(page->arena) - 1;
 }
 
 void SGL_Element_Destroy(SGL_Element* element) {
@@ -74,10 +81,10 @@ bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y) {
         y <= (target->rect.border.y + target->rect.border.h)
     );
 }
-
-void SGL_ElementAddChild(SGL_Element* parent, SGL_Element child) {
-    LJG_MetaVec_Push(parent->children, child);
-    if (errno == ENOMEM) {
-        SGL_Panic("SGL_Element_AddChild(): ran out of memory");
-    }
-}
+// 
+// void SGL_ElementAddChild(SGL_Element* parent, SGL_Element child) {
+//     LJG_MetaVec_Push(parent->children, child);
+//     if (errno == ENOMEM) {
+//         SGL_Panic("SGL_Element_AddChild(): ran out of memory");
+//     }
+// }

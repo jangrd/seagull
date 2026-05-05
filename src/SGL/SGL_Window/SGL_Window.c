@@ -58,17 +58,17 @@ void SGL_Window_Render(SGL_Window* window) {
     }
     SGL_Page* page = SGL_Window_GetCurrentPage(window);
     
-    page->root.rect.inner.x = 0;
-    page->root.rect.inner.y = 0;
-    page->root.rect.inner.w = width;
-    page->root.rect.inner.h = height;
+    page->arena[page->root_index].rect.inner.x = 0;
+    page->arena[page->root_index].rect.inner.y = 0;
+    page->arena[page->root_index].rect.inner.w = width;
+    page->arena[page->root_index].rect.inner.h = height;
     
     SGL_Element** queue = NULL;
     LJG_MetaVec_Init(queue, SGL_IndexCount(page->index));
 
     size_t first = 0;
     size_t depth = 0;
-    LJG_MetaVec_Push(queue, &(page->root));
+    LJG_MetaVec_Push(queue, &(page->arena[page->root_index]));
     size_t last = LJG_MetaVec_Len(queue) - 1;
     do {
         size_t level_size = last - first;
@@ -125,7 +125,7 @@ void SGL_Window_Render(SGL_Window* window) {
             }
             SDL_RenderFillRect(window->renderer, &(current->rect.main));
             for (size_t j = 0; j < LJG_MetaVec_Len(current->children); j++) {
-                queue[last++] = &(current->children[j]);
+                queue[last++] = &(page->arena[current->children[j]]);
             }
         }
         depth++;
@@ -239,7 +239,7 @@ void SGL_Window_Update(SGL_Window* window) {
     SGL_Element** stack = (SGL_Element**)malloc(stack_size * sizeof(SGL_Element*));
     if (stack == NULL) return;
     size_t top = 0;
-    stack[top++] = &(page->root);
+    stack[top++] = &(page->arena[page->root_index]);
 
     // TODO: otkrij jel potrebno
     if (page->index == NULL) {
@@ -259,13 +259,13 @@ void SGL_Window_Update(SGL_Window* window) {
 
         float total_units = 0;
         for (size_t i = 0; i < LJG_MetaVec_Len(element->children); i++) {
-            stack[top++] = &(element->children[i]);
-            total_units += element->children[i].style.units;
+            stack[top++] = &(page->arena[element->children[i]]);
+            total_units += page->arena[element->children[i]].style.units;
         }
 
         float used_units = 0;
         for (size_t i = 0; i < LJG_MetaVec_Len(element->children); i++) {
-            SGL_Element* child = &(element->children[i]);
+            SGL_Element* child = &(page->arena[element->children[i]]);
             // TODO: get rid of this if statement
             // i believe clay solves this by using
             // along and across direction instead of vertical horizontal

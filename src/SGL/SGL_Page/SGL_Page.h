@@ -6,7 +6,8 @@
 #include "../SGL_Index/SGL_Index.h"
 
 typedef struct {
-    SGL_Element root;
+    SGL_Element* arena; // LJG_MetaVec
+    size_t root_index; // invalid if arena==NULL
     SGL_Index* index;
     SGL_Theme theme;
 } SGL_Page;

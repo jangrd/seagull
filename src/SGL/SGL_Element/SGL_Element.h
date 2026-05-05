@@ -1,15 +1,20 @@
 #ifndef SGL_ELEMENT_H
 #define SGL_ELEMENT_H
 
-#include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
-// #include "../SGL_Vector/SGL_Vector.h"
+#include <errno.h>
+
+#include <SDL3/SDL.h>
+
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
+#include "../SGL_Page/SGL_Page.h"
+// TODO: ??
+#include "../SGL_Index/SGL_Index.h"
 
 #define LJG_IMPLEMENTATION // TODO: i dont remember implementing this but okay?
 #include "../../../external/LJG/LJG_MetaVec.h"
@@ -43,9 +48,9 @@ typedef struct SGL_ElementStyle {
 typedef struct SGL_Element {
     SGL_ElementRect rect;
     SGL_ElementStyle style;
-    struct SGL_Element* children; // LJG_MetaVec
     SGL_Callback on_click;
-    // TODO: turn these bools into unified state
+    // LJG_MetaVec of indexes into SGL_Page.arena
+    size_t* children;
     bool is_new;
 } SGL_Element;
 
@@ -90,16 +95,14 @@ typedef struct SGL_ElementCallbackArgument {
 #define SGL_STYLE(...)                                                            \
     &(SGL_ElementStyleArgument) {                                                \
         .type    = SGL_TYPE_STYLE,                                                \
-        .style    = (SGL_ElementStyle){ SGL_ELEMENT_STYLE_DEFAULT, __VA_ARGS__ }    \
+        .style   = (SGL_ElementStyle){ SGL_ELEMENT_STYLE_DEFAULT, __VA_ARGS__ }    \
     }
 
-// TODO: chat said to use SGL_Element*[]
-//         understand why and see if it has to be that way
 #define SGL_CHILDREN(...)                                                                \
     &(SGL_ElementChildArgument) {                                                        \
         .type        = SGL_TYPE_CHILD,                                                    \
-        .children    = (SGL_Element[]){ __VA_ARGS__ },                                    \
-        .count        = sizeof((SGL_Element[]){ __VA_ARGS__ }) / sizeof(SGL_Element)    \
+        .children    = (size_t[]){ __VA_ARGS__ },                                    \
+        .count       = sizeof((size_t[]){ __VA_ARGS__ }) / sizeof(size_t)    \
     }
 
 #define SGL_ONCLICK(func, args) \
@@ -109,14 +112,14 @@ typedef struct SGL_ElementCallbackArgument {
         .callback = SGL_CALLBACK(func, args) \
     }
     
-SGL_Element SGL_Element_New(void* first_arg, ...);
+size_t SGL_Element_New(SGL_Page* page, ...);
 void SGL_Element_Destroy(SGL_Element* target);
 bool SGL_ElementIsPointInside(SGL_Element* target, float x, float y);
 void SGL_ElementAddChild(SGL_Element* parent, SGL_Element child);
 
 
 #define SGL_ELEMENT(...) \
-    SGL_Element_New(__VA_ARGS__, (SGL_Element*)NULL)
+    SGL_Element_New(&(window->pages[window->current_page_index]), __VA_ARGS__, (SGL_Element*)NULL)
 
 #endif
 
