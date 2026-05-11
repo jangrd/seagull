@@ -19,12 +19,6 @@ typedef struct SGL_Element SGL_Element;
 #define LJG_IMPLEMENTATION // TODO: i dont remember implementing this but okay?
 #include "../../../external/LJG/LJG_MetaVec.h"
 
-// TODO: duplicate of SGL_Page.h definition
-typedef struct {
-    size_t index;
-    size_t size;
-} _SGL_Page_Subtree;
-
 typedef struct SGL_ElementRect {
     SDL_FRect outer;
     SDL_FRect border;
@@ -48,7 +42,7 @@ typedef struct SGL_ElementStyle {
     float gap;
     float padding;
     float margin;
-       float border;
+    float border;
 } SGL_ElementStyle;
 
 typedef struct SGL_Element {

@@ -6,15 +6,13 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
     }
     
     SGL_Element element;
-
-    _SGL_Page_Subtree subtree;
-    subtree.size = 1;
-
     element.on_click = (SGL_Callback){NULL, NULL};
-
+    
     va_list args;
     va_start(args, page);
-    bool style_set = false;    
+    bool style_set = false;
+    size_t *children    = NULL;
+    size_t  child_count = 0;
     for (void* arg = page; arg != NULL; arg = va_arg(args, void*)) {
         SGL_ElementBaseArgument* base = arg;
         switch (base->type) {
@@ -29,7 +27,9 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
                 break;
                 
             case SGL_TYPE_CHILD:
-                subtree.size++;
+                SGL_ElementChildArgument* child_arg = arg;
+                children    = child_arg->children_ids;
+                child_count = child_arg->count;
                 break;
             case SGL_TYPE_CALLBACK:
                 SGL_ElementCallbackArgument* callback_arg = arg;
@@ -50,17 +50,7 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
     assert(element.style.margin  >= 0.0);
     assert(element.style.border  >= 0.0);
 
-    LJG_MetaVec_Push(page->arena, element);
-    if (errno == ENOMEM) {
-        SGL_Panic("Ran out of memory");
-    }
-
-    size_t index = LJG_MetaVec_Len(page->arena) - 1;
-    subtree.index = index;
-
-    LJG_MetaVec_Push(page->tree, subtree);
-    
-    return index;
+    return SGL_Page_AddElement(page, element, children, child_count);
 }
 
 

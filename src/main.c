@@ -1,32 +1,32 @@
 #include "./SGL/SGL.h"
 
-void myFunc(SGL_Element* element, void *arg) {
-	SGL_Window* window = (SGL_Window*)arg;
-
-    for (size_t i = 0; i < 60; i++) {
- //    
- //    SGL_UI_START
-	// SGL_ElementAddChild(
-	// 	element,
-	// 	SGL_ELEMENT(
-	// 		SGL_STYLE(
-	// 			.background_color = SGL_ColorHex(0xFF00FFFF),
-	// 			.border = 2
-	// 		)
-	// 	)
-	// );
- //    SGL_UI_END
-    }
-	
-	size_t c = 0;
-	size_t sum = 0;
-	SGL_Page* page = SGL_Window_GetCurrentPage(window);
-	for (SGL_IndexNode* node = page->index->first; node != NULL; node = node->next) {
-		sum += sizeof(*node->element) + sizeof(*node->element->children);
-		c++;
-	}
-	printf("%zu elements taking up %zu bytes\n", c, sum);
-}
+// void myFunc(SGL_Element* element, void *arg) {
+// 	SGL_Window* window = (SGL_Window*)arg;
+// 
+//     for (size_t i = 0; i < 60; i++) {
+//     
+//     SGL_UI_START
+// 	SGL_ElementAddChild(
+// 		element,
+// 		SGL_ELEMENT(
+// 			SGL_STYLE(
+// 				.background_color = SGL_ColorHex(0xFF00FFFF),
+// 				.border = 2
+// 			)
+// 		)
+// 	);
+//     SGL_UI_END
+//     }
+// 	
+// 	size_t c = 0;
+// 	size_t sum = 0;
+// 	SGL_Page* page = SGL_Window_GetCurrentPage(window);
+// 	for (SGL_IndexNode* node = page->index->first; node != NULL; node = node->next) {
+// 		sum += sizeof(*node->element) + sizeof(*node->element->children);
+// 		c++;
+// 	}
+// 	printf("%zu elements taking up %zu bytes\n", c, sum);
+// }
 
 int main() {
     if (!SGL_Init()) return SGL_FAILURE;
@@ -54,8 +54,8 @@ int main() {
               ),
               SGL_CHILDREN(
                 SGL_ELEMENT(
-                  SGL_STYLE(.border = 2),
-                  SGL_ONCLICK(myFunc, window)
+                  SGL_STYLE(.border = 2)
+                  //, SGL_ONCLICK(myFunc, window)
                 ),
                 SGL_ELEMENT(
                   SGL_STYLE(.units = 3, .border = 2)

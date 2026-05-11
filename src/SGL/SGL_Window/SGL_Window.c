@@ -58,10 +58,10 @@ void SGL_Window_Render(SGL_Window* window) {
     }
     SGL_Page* page = SGL_Window_GetCurrentPage(window);
     
-    page->arena[page->tree->index].rect.inner.x = 0;
-    page->arena[page->root->index].rect.inner.y = 0;
-    page->arena[page->root->index].rect.inner.w = width;
-    page->arena[page->root->index].rect.inner.h = height;
+    page->arena[page->mv_tree->arena_idx].rect.inner.x = 0;
+    page->arena[page->mv_tree->arena_idx].rect.inner.y = 0;
+    page->arena[page->mv_tree->arena_idx].rect.inner.w = width;
+    page->arena[page->mv_tree->arena_idx].rect.inner.h = height;
     
     SGL_Element** queue = NULL;
     LJG_MetaVec_Init(queue, 1024);
