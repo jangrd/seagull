@@ -14,7 +14,8 @@ typedef struct SGL_Element SGL_Element;
 #include "../SGL_Log/SGL_Log.h"
 #include "../SGL_Callback/SGL_Callback.h"
 #include "../SGL_Theme/SGL_Theme.h"
-#include "../SGL_Page/SGL_Page.h"
+// #include "../SGL_Page/SGL_Page.h"
+typedef struct SGL_Page SGL_Page;
 
 #define LJG_IMPLEMENTATION // TODO: i dont remember implementing this but okay?
 #include "../../../external/LJG/LJG_MetaVec.h"
@@ -49,7 +50,6 @@ typedef struct SGL_Element {
     SGL_ElementRect rect;
     SGL_ElementStyle style;
     SGL_Callback on_click;
-    bool is_new;
 } SGL_Element;
 
 typedef enum {

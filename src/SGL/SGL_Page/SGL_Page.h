@@ -8,7 +8,7 @@
 typedef struct {
     SGL_Element* arena; // LJG_MetaVec
     _SGL_TreeNode* mv_tree;
-    size_t tree_root_idxs;
+    size_t tree_root_idx;
     SGL_Theme theme;
 } SGL_Page;
 
@@ -16,7 +16,8 @@ SGL_Page SGL_Page_New();
 void SGL_Page_AttachUI(SGL_Page* page, size_t root_id);
 void SGL_Page_Destroy(SGL_Page* page);
 
-size_t SGL_Page_AddElement(SGL_Page *page, SGL_Element element, size_t *children, size_t child_count);
+size_t SGL_Page_AddElement(SGL_Page* page, SGL_Element element, size_t *children, size_t child_count);
+void SGL_Page_Update(SGL_Page* page);
 
 void SGL_Page_SetTheme(SGL_Page* page, SGL_Theme theme);
 

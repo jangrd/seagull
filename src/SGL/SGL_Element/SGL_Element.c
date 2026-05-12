@@ -49,7 +49,8 @@ size_t SGL_Element_New(SGL_Page* page, ...) {
     assert(element.style.padding >= 0.0);
     assert(element.style.margin  >= 0.0);
     assert(element.style.border  >= 0.0);
-
+    // TODO: find better solution
+    size_t SGL_Page_AddElement(SGL_Page* page, SGL_Element element, size_t *children, size_t child_count);
     return SGL_Page_AddElement(page, element, children, child_count);
 }
 
