@@ -31,12 +31,12 @@ void SGL_Page_Destroy(SGL_Page* page) {
 #define pop(stack) temp = stack[LJG_MetaVec_Len(stack)-1]; top--;
 
 
-// void SGL_Page_AttachUI(SGL_Page* page, size_t root_id) {
-//     if (page == NULL) {
-//         SGL_Panic("User error, page is NULL");
-//     }
-//     SGL_Page_Destroy(page);
-// }
+void SGL_Page_AttachUI(SGL_Page* page, size_t root_id) {
+    if (page == NULL) {
+        SGL_Panic("User error, page is NULL");
+    }
+    page->tree_root_idx = root_id;
+}
 
 size_t SGL_Page_AddElement(SGL_Page *page, SGL_Element element, size_t *children, size_t child_count) {
     LJG_MetaVec_Push(page->arena, element);
@@ -78,39 +78,41 @@ void SGL_Page_Update(SGL_Page* page) {
         return;
     }
     
-    // TODO: IMPLEMENT PROPER STACK, THIS IS IMPROPER!!!
     size_t* mv_stack; // indicies into page->mv_tree
     LJG_MetaVec_Init(mv_stack, 1024);
-    size_t top = 0;
-    mv_stack[top++] = page->tree_root_idx;
-    
-    while (top > 0) {
-        _SGL_TreeNode* node = &page->mv_tree[mv_stack[--top]];
+    LJG_MetaVec_Push(mv_stack, page->tree_root_idx);
+
+    while (LJG_MetaVec_Len(mv_stack) > 0) {
+        _LJG_MetaVec_Header* _hdr = (_LJG_MetaVec_Header*)mv_stack - 1;
+        _SGL_TreeNode* node = &page->mv_tree[mv_stack[--_hdr->count]];
         SGL_Element* element = &page->arena[node->arena_idx];
 
+        size_t child_count = 0;
         float total_units = 0;
-        for (size_t i = node->first_child; i < node->next_sibling; i++) {
-            mv_stack[top++] = i;
-            total_units += element->style.units;
+        for (size_t i = node->first_child; i != SGL_TREENODE_NULL; i = page->mv_tree[i].next_sibling) {
+            LJG_MetaVec_Push(mv_stack, i);
+            total_units += page->arena[i].style.units;
+            child_count++;
         }
 
         float used_units = 0;
-        for (size_t i = node->first_child; i < node->next_sibling; i++) {
+        size_t gap_idx = 0;
+        for (size_t i = node->first_child; i != SGL_TREENODE_NULL; i = page->mv_tree[i].next_sibling) {
             SGL_Element* child = &(page->arena[i]);
             // TODO: get rid of this if statement
             // i believe clay solves this by using
             // along and across direction instead of vertical horizontal
             if (element->style.stack) {
-                int available_width = element->rect.inner.w - element->style.gap * (node->next_sibling - node->first_child - 1);
-                child->rect.outer.x = element->rect.inner.x + available_width / total_units * used_units + element->style.gap * i;
+                float available_width = element->rect.inner.w - element->style.gap * (child_count > 0 ? child_count - 1 : 0);
+                child->rect.outer.x = element->rect.inner.x + available_width / total_units * used_units + element->style.gap * gap_idx;
                 child->rect.outer.y = element->rect.inner.y;
                 child->rect.outer.w = available_width / total_units * child->style.units;
                 child->rect.outer.h = element->rect.inner.h;
             }
             else {
-                int available_height = element->rect.inner.h - element->style.gap * (node->next_sibling - node->first_child - 1);
+                float available_height = element->rect.inner.h - element->style.gap * (child_count > 0 ? child_count - 1 : 0);
                 child->rect.outer.x = element->rect.inner.x;
-                child->rect.outer.y = element->rect.inner.y + available_height / total_units * used_units + element->style.gap * i;
+                child->rect.outer.y = element->rect.inner.y + available_height / total_units * used_units + element->style.gap * gap_idx;
                 child->rect.outer.w = element->rect.inner.w;
                 child->rect.outer.h = available_height / total_units * child->style.units;
             }
@@ -130,8 +132,10 @@ void SGL_Page_Update(SGL_Page* page) {
             child->rect.inner.h = child->rect.main.h - 2 * child->style.padding;
     
             used_units += child->style.units;
+            gap_idx++;
         }
     }
+    LJG_MetaVec_Free(mv_stack);
 }
 
 void SGL_Page_SetTheme(SGL_Page* page, SGL_Theme theme) {

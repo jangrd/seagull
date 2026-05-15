@@ -52,24 +52,15 @@ void SGL_Window_Destroy(SGL_Window* window) {
 }
 
 void SGL_Window_Render(SGL_Window* window) {
-    int width, height;
-    if(!SDL_GetRenderOutputSize(window->renderer, &width, &height)) {
-        SGL_Panic("SDL_GetRenderOutputSize failed: \"%s\"\n", SDL_GetError());
-    }
     SGL_Page* page = SGL_Window_GetCurrentPage(window);
-    
-    page->arena[page->mv_tree->arena_idx].rect.inner.x = 0;
-    page->arena[page->mv_tree->arena_idx].rect.inner.y = 0;
-    page->arena[page->mv_tree->arena_idx].rect.inner.w = width;
-    page->arena[page->mv_tree->arena_idx].rect.inner.h = height;
-    
-    size_t* mv_queue = NULL; // indicies into mv_tree
+
+    size_t* mv_queue = NULL;
     LJG_MetaVec_Init(mv_queue, 1024);
 
     size_t first = 0;
     size_t depth = 0;
     LJG_MetaVec_Push(mv_queue, page->tree_root_idx);
-    size_t last = LJG_MetaVec_Len(mv_queue) - 1;
+    size_t last = LJG_MetaVec_Len(mv_queue);
     do {
         size_t level_size = last - first;
         for (size_t i = 0; i < level_size; i++) {
@@ -125,7 +116,7 @@ void SGL_Window_Render(SGL_Window* window) {
                );
             }
             SDL_RenderFillRect(window->renderer, &(current_element->rect.main));
-            for (size_t j = current_node->first_child; j < current_node->next_sibling; j++) {
+            for (size_t j = current_node->first_child; j != SGL_TREENODE_NULL; j = page->mv_tree[j].next_sibling) {
                 mv_queue[last++] = j;
             }
         }
@@ -139,59 +130,63 @@ void SGL_Window_SetTheme(SGL_Window* window, SGL_Theme theme) {
         SGL_Page_SetTheme(&window->pages[i], theme);
     }
 }
-// 
-// void SGL_Window_HandleMouseclick(SGL_Window* window, SDL_Event* event) {
-//     SGL_Element* clicked_element = NULL;
-//     SGL_Page* page = SGL_Window_GetCurrentPage(window);
-//     SGL_IndexNode* node = page->index->first;
-// 
-//     // TODO: oktrij jel ovo moguce
-//     if (node == NULL) {
-//         SGL_Panic("watafak\n");
-//     }
-//     
-//     while (node != NULL) {
-//         if (SGL_ElementIsPointInside(node->element, event->button.x, event->button.y)) {           
-//            clicked_element = node->element;
-//         }
-//         node = node->next;    
-//     }
-//     if (clicked_element == NULL) {
-//         SGL_Log("No clicked element found, ignoring...\n");
-//         return;
-//     }
-// 
-//     int click_was_left = -1;
-//     switch (event->button.button) {
-//         case SDL_BUTTON_LEFT:
-//             click_was_left = true;
-//             break;
-//         case SDL_BUTTON_RIGHT:
-//             click_was_left = false;
-//             break;
-//     }
-// 
-//     switch (event->type) {
-//         case SDL_EVENT_MOUSE_BUTTON_DOWN:
-//             window->mouse.last_mdown = clicked_element;
-//             break;
-//         case SDL_EVENT_MOUSE_BUTTON_UP:
-//             if (
-//                 window->mouse.last_mdown == clicked_element
-//                 && window->mouse.click_was_left == click_was_left
-//                 && window->mouse.click_was_left == true
-//             ) {
-//                 if (clicked_element->on_click.function != NULL) {
-//                     (*clicked_element->on_click.function)(clicked_element, clicked_element->on_click.parameters);
-//                 }
-//             }
-//             
-//             break;
-//     }
-// 
-//     window->mouse.click_was_left = click_was_left;
-// }
 
+void SGL_Window_HandleMouseclick(SGL_Window* window, SDL_Event* event) {
+    SGL_Element* clicked_element = NULL;
+
+    SGL_Page* page = SGL_Window_GetCurrentPage(window);
+
+    size_t* mv_queue = NULL;
+    LJG_MetaVec_Init(mv_queue, 64);
+    LJG_MetaVec_Push(mv_queue, page->tree_root_idx);
+
+    size_t first = 0;
+    while (first < LJG_MetaVec_Len(mv_queue)) {
+        _SGL_TreeNode* node = &page->mv_tree[mv_queue[first++]];
+        SGL_Element* element = &page->arena[node->arena_idx];
+        if (SGL_ElementIsPointInside(element, event->button.x, event->button.y)) {
+            clicked_element = element;
+            for (size_t j = node->first_child; j != SGL_TREENODE_NULL; j = page->mv_tree[j].next_sibling) {
+                LJG_MetaVec_Push(mv_queue, j);
+            }
+        }
+    }
+    LJG_MetaVec_Free(mv_queue);
+    if (clicked_element == NULL) {
+        SGL_Log("No clicked element found, ignoring...\n");
+        return;
+    }
+
+    int click_was_left = -1;
+    switch (event->button.button) {
+        case SDL_BUTTON_LEFT:
+            click_was_left = true;
+            break;
+        case SDL_BUTTON_RIGHT:
+            click_was_left = false;
+            break;
+    }
+
+    switch (event->type) {
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            window->mouse.last_mdown = clicked_element;
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (
+                window->mouse.last_mdown == clicked_element
+                && window->mouse.click_was_left == click_was_left
+                && window->mouse.click_was_left == true
+            ) {
+                if (clicked_element->on_click.function != NULL) {
+                    (*clicked_element->on_click.function)(clicked_element, clicked_element->on_click.parameters);
+                }
+            }
+            
+            break;
+    }
+
+    window->mouse.click_was_left = click_was_left;
+}
 
 void SGL_Window_Mainloop(SGL_Window* window) {
     bool running = true;
@@ -233,6 +228,12 @@ void SGL_Window_Mainloop(SGL_Window* window) {
 }
 
 void SGL_Window_Update(SGL_Window* window) {
-    SGL_Page_Update(SGL_Window_GetCurrentPage(window));
+    int width, height;
+    if (!SDL_GetRenderOutputSize(window->renderer, &width, &height)) {
+        SGL_Panic("SDL_GetRenderOutputSize failed: \"%s\"\n", SDL_GetError());
+    }
+    SGL_Page* page = SGL_Window_GetCurrentPage(window);
+    page->arena[page->tree_root_idx].rect.inner = (SDL_FRect){ 0, 0, (float)width, (float)height };
+    SGL_Page_Update(page);
 }
 

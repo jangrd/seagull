@@ -5,7 +5,7 @@
 #include "../SGL_Element/SGL_Element.h"
 #include "../SGL_TreeNode/SGL_TreeNode.h"
 
-typedef struct {
+typedef struct SGL_Page {
     SGL_Element* arena; // LJG_MetaVec
     _SGL_TreeNode* mv_tree;
     size_t tree_root_idx;
